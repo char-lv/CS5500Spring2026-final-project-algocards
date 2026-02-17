@@ -17,7 +17,7 @@ AlgoCard is an Android flashcard app designed for LeetCode-style interview prepa
 - 🧠 Anthropic Claude API / OpenAI (AI features)
 
 ## Team 👥
-- Chengling Lv - charlv
-- Jia-Wen Wan
-- Minghui Xu
-- Xiaowen Zhao
+- Chengling Lv - char-lv
+- Minghui Xu - 1hs0ym1nas
+- Xiaowen Zhao - Cici-okk
+- Jia-Wen Wan - garywan617
