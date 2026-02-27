@@ -10,18 +10,24 @@
 		CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */; };
 		CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */; };
 		CBD3E2C82F516CFE008663AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CBD3E2C72F516CFE008663AB /* Assets.xcassets */; };
-		CBF3B2E22F516FE90065C963 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CBF3B2DD2F516FE90065C963 /* LaunchScreen.storyboard */; };
-		CBF3B2E32F516FE90065C963 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CBF3B2DF2F516FE90065C963 /* Main.storyboard */; };
+		CBF3B2E62F5172860065C963 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CBF3B2DE2F516FE90065C963 /* Main.storyboard */; };
+		CBF3B2E72F5172860065C963 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = CBF3B2DC2F516FE90065C963 /* LaunchScreen.storyboard */; };
+		CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2E82F5177A20065C963 /* UIViewController.swift */; };
+		D2D06B877ECCB6644D580604 /* Pods_AlgoCards.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0F16DA2BF17DDE381FE34E5 /* Pods_AlgoCards.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3E187D464C03F9D0CB0BE006 /* Pods-AlgoCards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.release.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"; sourceTree = "<group>"; };
+		9F399B82E3F50BE1CE56EFF7 /* Pods-AlgoCards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.debug.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.debug.xcconfig"; sourceTree = "<group>"; };
+		A0F16DA2BF17DDE381FE34E5 /* Pods_AlgoCards.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AlgoCards.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CBD3E2BB2F516CFC008663AB /* AlgoCards.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlgoCards.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		CBD3E2C72F516CFE008663AB /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		CBD3E2CC2F516CFE008663AB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		CBF3B2DC2F516FE90065C963 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
-		CBF3B2DE2F516FE90065C963 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Main.storyboard; sourceTree = "<group>"; };
+		CBF3B2DC2F516FE90065C963 /* LaunchScreen.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = LaunchScreen.storyboard; sourceTree = "<group>"; };
+		CBF3B2DE2F516FE90065C963 /* Main.storyboard */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; path = Main.storyboard; sourceTree = "<group>"; };
+		CBF3B2E82F5177A20065C963 /* UIViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,17 +35,37 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				D2D06B877ECCB6644D580604 /* Pods_AlgoCards.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		A14920B2D33216062583D6E5 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				A0F16DA2BF17DDE381FE34E5 /* Pods_AlgoCards.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		AB6F37321EFAB97D8A9FC8BB /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				9F399B82E3F50BE1CE56EFF7 /* Pods-AlgoCards.debug.xcconfig */,
+				3E187D464C03F9D0CB0BE006 /* Pods-AlgoCards.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
 		CBD3E2B22F516CFC008663AB = {
 			isa = PBXGroup;
 			children = (
 				CBD3E2BD2F516CFC008663AB /* AlgoCards */,
 				CBD3E2BC2F516CFC008663AB /* Products */,
+				AB6F37321EFAB97D8A9FC8BB /* Pods */,
+				A14920B2D33216062583D6E5 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -55,7 +81,6 @@
 			isa = PBXGroup;
 			children = (
 				CBF3B2D52F516FE90065C963 /* App */,
-				CBF3B2E02F516FE90065C963 /* Base.lproj */,
 				CBF3B2DB2F516FE90065C963 /* Core */,
 				CBF3B2D32F516FE90065C963 /* Features */,
 				CBF3B2D42F516FE90065C963 /* Resources */,
@@ -105,8 +130,8 @@
 		CBF3B2D42F516FE90065C963 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
-				CBF3B2DF2F516FE90065C963 /* Main.storyboard */,
-				CBF3B2DD2F516FE90065C963 /* LaunchScreen.storyboard */,
+				CBF3B2DE2F516FE90065C963 /* Main.storyboard */,
+				CBF3B2DC2F516FE90065C963 /* LaunchScreen.storyboard */,
 				CBD3E2CC2F516CFE008663AB /* Info.plist */,
 				CBD3E2C72F516CFE008663AB /* Assets.xcassets */,
 			);
@@ -132,6 +157,7 @@
 		CBF3B2D82F516FE90065C963 /* Extensions */ = {
 			isa = PBXGroup;
 			children = (
+				CBF3B2E82F5177A20065C963 /* UIViewController.swift */,
 			);
 			path = Extensions;
 			sourceTree = "<group>";
@@ -161,13 +187,6 @@
 			path = Core;
 			sourceTree = "<group>";
 		};
-		CBF3B2E02F516FE90065C963 /* Base.lproj */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = Base.lproj;
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -175,9 +194,11 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = CBD3E2CF2F516CFE008663AB /* Build configuration list for PBXNativeTarget "AlgoCards" */;
 			buildPhases = (
+				824EE168A413CD513EE29214 /* [CP] Check Pods Manifest.lock */,
 				CBD3E2B72F516CFC008663AB /* Sources */,
 				CBD3E2B82F516CFC008663AB /* Frameworks */,
 				CBD3E2B92F516CFC008663AB /* Resources */,
+				3E9598F8360C5DB16F1888C1 /* [CP] Embed Pods Frameworks */,
 			);
 			buildRules = (
 			);
@@ -227,12 +248,54 @@
 			buildActionMask = 2147483647;
 			files = (
 				CBD3E2C82F516CFE008663AB /* Assets.xcassets in Resources */,
-				CBF3B2E32F516FE90065C963 /* Main.storyboard in Resources */,
-				CBF3B2E22F516FE90065C963 /* LaunchScreen.storyboard in Resources */,
+				CBF3B2E62F5172860065C963 /* Main.storyboard in Resources */,
+				CBF3B2E72F5172860065C963 /* LaunchScreen.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		3E9598F8360C5DB16F1888C1 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AlgoCards/Pods-AlgoCards-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-AlgoCards/Pods-AlgoCards-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-AlgoCards/Pods-AlgoCards-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		824EE168A413CD513EE29214 /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-AlgoCards-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		CBD3E2B72F516CFC008663AB /* Sources */ = {
@@ -241,29 +304,11 @@
 			files = (
 				CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */,
 				CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */,
+				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
-
-/* Begin PBXVariantGroup section */
-		CBF3B2DD2F516FE90065C963 /* LaunchScreen.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				CBF3B2DC2F516FE90065C963 /* Base */,
-			);
-			name = LaunchScreen.storyboard;
-			sourceTree = "<group>";
-		};
-		CBF3B2DF2F516FE90065C963 /* Main.storyboard */ = {
-			isa = PBXVariantGroup;
-			children = (
-				CBF3B2DE2F516FE90065C963 /* Base */,
-			);
-			name = Main.storyboard;
-			sourceTree = "<group>";
-		};
-/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		CBD3E2CD2F516CFE008663AB /* Debug */ = {
@@ -387,6 +432,7 @@
 		};
 		CBD3E2D02F516CFE008663AB /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9F399B82E3F50BE1CE56EFF7 /* Pods-AlgoCards.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -420,6 +466,7 @@
 		};
 		CBD3E2D12F516CFE008663AB /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = 3E187D464C03F9D0CB0BE006 /* Pods-AlgoCards.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
