@@ -21,3 +21,24 @@ AlgoCard is an Android flashcard app designed for LeetCode-style interview prepa
 - Minghui Xu - 1hs0ym1nas
 - Xiaowen Zhao - Cici-okk
 - Jia-Wen Wan - garywan617
+
+# Setup Instructions
+
+### 1. Clone the repo
+```bash
+git clone https://github.com/char-lv/CS5500Spring2026-final-project-algocards
+cd AlgoCards
+```
+
+### 2. Install CocoaPods dependencies
+```bash
+pod install
+```
+
+### 3. Open the workspace use command or open in Xcode
+```bash
+open AlgoCards.xcworkspace
+```
+Once you have the dependecies installed, please open `.xcworkspace` in Xcode to open up the project. NOT `.xcodeproj`!
+
+ 
