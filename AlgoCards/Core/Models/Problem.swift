@@ -42,12 +42,27 @@ struct ProblemListItem: Codable, Identifiable {
     let title: String
     let titleSlug: String
     let difficulty: Difficulty
+    let acRate: Double
+    let isPaidOnly: Bool
+    let hasSolution: Bool
+    let topicTags: [TopicTag]
 
     enum CodingKeys: String, CodingKey {
         case id = "questionFrontendId"
         case title, titleSlug, difficulty
+        case acRate, isPaidOnly, hasSolution, topicTags
+    }
+
+    var formattedAcRate: String {
+        String(format: "%.1f%%", acRate)
     }
 }
+
+struct TopicTag: Codable {
+    let name: String
+    let slug: String
+}
+
 
 struct Problem: Codable, Identifiable {
     let id: String
