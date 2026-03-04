@@ -27,12 +27,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Routing
 
         func routeInitialScreen() {
-//            if Auth.auth().currentUser != nil {
-//                showMainApp()
-//            } else {
-//                showAuth()
-//            }
-            showAuth() // comment as todo after firebase is configured
+            if Auth.auth().currentUser != nil {
+                showMainApp()
+            } else {
+                showAuth()
+            }
         }
 
         func showAuth() {

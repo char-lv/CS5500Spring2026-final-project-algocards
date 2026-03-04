@@ -17,6 +17,9 @@
 		CBF3B2ED2F51836E0065C963 /* User.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2EC2F51836E0065C963 /* User.swift */; };
 		CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2EE2F51837A0065C963 /* Answer.swift */; };
 		CBF3B2F12F5183820065C963 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2F02F5183820065C963 /* Comment.swift */; };
+		CBF45C1B2F58D584007739CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CBF45C1A2F58D584007739CB /* GoogleService-Info.plist */; };
+		CBF45C1D2F58D612007739CB /* APIConfigs.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C1C2F58D612007739CB /* APIConfigs.swift */; };
+		CBF45C1F2F58D696007739CB /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C1E2F58D696007739CB /* NetworkManager.swift */; };
 		D2D06B877ECCB6644D580604 /* Pods_AlgoCards.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = A0F16DA2BF17DDE381FE34E5 /* Pods_AlgoCards.framework */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +39,9 @@
 		CBF3B2EC2F51836E0065C963 /* User.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = User.swift; sourceTree = "<group>"; };
 		CBF3B2EE2F51837A0065C963 /* Answer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
 		CBF3B2F02F5183820065C963 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
+		CBF45C1A2F58D584007739CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		CBF45C1C2F58D612007739CB /* APIConfigs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfigs.swift; sourceTree = "<group>"; };
+		CBF45C1E2F58D696007739CB /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +144,7 @@
 		CBF3B2D42F516FE90065C963 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				CBF45C1A2F58D584007739CB /* GoogleService-Info.plist */,
 				CBF3B2DE2F516FE90065C963 /* Main.storyboard */,
 				CBF3B2DC2F516FE90065C963 /* LaunchScreen.storyboard */,
 				CBD3E2CC2F516CFE008663AB /* Info.plist */,
@@ -158,6 +165,7 @@
 		CBF3B2D72F516FE90065C963 /* Constants */ = {
 			isa = PBXGroup;
 			children = (
+				CBF45C1C2F58D612007739CB /* APIConfigs.swift */,
 			);
 			path = Constants;
 			sourceTree = "<group>";
@@ -184,6 +192,7 @@
 		CBF3B2DA2F516FE90065C963 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				CBF45C1E2F58D696007739CB /* NetworkManager.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -260,6 +269,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				CBD3E2C82F516CFE008663AB /* Assets.xcassets in Resources */,
+				CBF45C1B2F58D584007739CB /* GoogleService-Info.plist in Resources */,
 				CBF3B2E62F5172860065C963 /* Main.storyboard in Resources */,
 				CBF3B2E72F5172860065C963 /* LaunchScreen.storyboard in Resources */,
 			);
@@ -314,12 +324,14 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CBF45C1F2F58D696007739CB /* NetworkManager.swift in Sources */,
 				CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */,
 				CBF3B2EB2F5183600065C963 /* Problem.swift in Sources */,
 				CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */,
 				CBF3B2F12F5183820065C963 /* Comment.swift in Sources */,
 				CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */,
 				CBF3B2ED2F51836E0065C963 /* User.swift in Sources */,
+				CBF45C1D2F58D612007739CB /* APIConfigs.swift in Sources */,
 				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
