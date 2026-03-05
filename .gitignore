@@ -19,3 +19,7 @@ GoogleService-Info.plist
 
 # Swift Package Manager
 .build/
+
+# Scripts for problems
+scripts/serviceAccountKey.json
+scripts/node_modules/
