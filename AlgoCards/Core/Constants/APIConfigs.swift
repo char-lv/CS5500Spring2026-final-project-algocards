@@ -7,9 +7,15 @@
 
 import Foundation
 
+// Difficulty Filter
+enum DifficultyFilter: String {
+    case easy   = "EASY"
+    case medium = "MEDIUM"
+    case hard   = "HARD"
+}
+
 enum APIConfigs {
 
-    // Base
     static let baseURL = "https://alfa-leetcode-api.onrender.com"
 
     // Problem Categories
@@ -35,17 +41,54 @@ enum APIConfigs {
             case .queue:         return "Queue"
             }
         }
-
-        var url: URL? {
-            URL(string: "\(APIConfigs.baseURL)/problems?tags=\(rawValue)&limit=50")
+        var icon: String {
+            switch self {
+            case .array:         return "🔢"
+            case .string:        return "🔤"
+            case .slidingWindow: return "🪟"
+            case .twoPointers:   return "2️⃣"
+            case .tree:          return "🌲"
+            case .graph:         return "🕸️"
+            case .stack:         return "📚"
+            case .queue:         return "🚶"
+            }
         }
     }
+    
+    static func problemListURL(
+            tags: [Category] = [],
+            difficulty: DifficultyFilter? = nil,
+            limit: Int = 50,
+            skip: Int = 0
+        ) -> URL? {
+            var components = URLComponents(string: "\(baseURL)/problems")
+            var queryItems: [URLQueryItem] = [
+                URLQueryItem(name: "limit", value: "\(limit)"),
+                URLQueryItem(name: "skip",  value: "\(skip)")
+            ]
+            if !tags.isEmpty {
+                let tagString = tags.map { $0.rawValue }.joined(separator: "+")
+                queryItems.append(URLQueryItem(name: "tags", value: tagString))
+            }
+            if let difficulty = difficulty {
+                queryItems.append(URLQueryItem(name: "difficulty", value: difficulty.rawValue))
+            }
+            components?.queryItems = queryItems
+            return components?.url
+        }
 
-    // Problem Detail
-    static func problemDetailURL(titleSlug: String) -> URL? {
-        URL(string: "\(baseURL)/select?titleSlug=\(titleSlug)")
+        static func problemDetailURL(titleSlug: String) -> URL? {
+            URL(string: "\(baseURL)/select?titleSlug=\(titleSlug)")
+        }
+
+        static func officialSolutionURL(titleSlug: String) -> URL? {
+            URL(string: "\(baseURL)/officialSolution?titleSlug=\(titleSlug)")
+        }
+
+        static var dailyProblemURL: URL? {
+            URL(string: "\(baseURL)/daily")
+        }
+
+        // MARK: - AI
+        // static let geminiBaseURL = "https://generativelanguage.googleapis.com/v1beta"
     }
-
-    // MARK: - AI
-    // static let geminiBaseURL = "https://generativelanguage.googleapis.com/v1beta"
-}

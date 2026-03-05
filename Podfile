@@ -10,6 +10,6 @@ target 'AlgoCards' do
   # Networking
   pod 'Alamofire', '~> 5.9'
 
-  pod 'IQKeyboardManagerSwift'
+#  pod 'IQKeyboardManagerSwift'
 
 end

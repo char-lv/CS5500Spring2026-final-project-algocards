@@ -30,12 +30,19 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             if Auth.auth().currentUser != nil {
                 showMainApp()
             } else {
-                showAuth()
+                // showAuth() # commented for testing problem view
+                showProblemsForTesting()
             }
+        }
+    
+        private func showProblemsForTesting() {
+            let homeVC = HomeViewController()
+            let nav = UINavigationController(rootViewController: homeVC)
+            setRoot(nav)
         }
 
         func showAuth() {
-            // Person A will replace LandingViewController with real implementation
+            // will be replaced by LandingViewController with real implementation
             let landingVC = UIViewController()
             landingVC.view.backgroundColor = .white
             let nav = UINavigationController(rootViewController: landingVC)
@@ -44,7 +51,7 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         }
 
         func showMainApp() {
-            // Person A will replace with MainTabBarController when ready
+            // will be replaced with MainTabBarController when ready
             let mainVC = UIViewController()
             mainVC.view.backgroundColor = .systemBackground
             setRoot(mainVC)

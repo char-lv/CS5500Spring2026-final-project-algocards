@@ -56,6 +56,10 @@ struct ProblemListItem: Codable, Identifiable {
     var formattedAcRate: String {
         String(format: "%.1f%%", acRate)
     }
+    
+    var leetcodeURL: URL? {
+            URL(string: "https://leetcode.com/problems/\(titleSlug)/")
+        }
 }
 
 struct TopicTag: Codable {

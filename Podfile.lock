@@ -1312,44 +1312,6 @@ PODS:
   - gRPC-Core/Interface (1.65.5)
   - gRPC-Core/Privacy (1.65.5)
   - GTMSessionFetcher/Core (4.1.0)
-  - IQKeyboardCore (1.0.8)
-  - IQKeyboardManagerSwift (8.0.1):
-    - IQKeyboardManagerSwift/Appearance (= 8.0.1)
-    - IQKeyboardManagerSwift/Core (= 8.0.1)
-    - IQKeyboardManagerSwift/IQKeyboardReturnManager (= 8.0.1)
-    - IQKeyboardManagerSwift/IQKeyboardToolbarManager (= 8.0.1)
-    - IQKeyboardManagerSwift/IQTextView (= 8.0.1)
-    - IQKeyboardManagerSwift/Resign (= 8.0.1)
-  - IQKeyboardManagerSwift/Appearance (8.0.1):
-    - IQKeyboardManagerSwift/Core
-  - IQKeyboardManagerSwift/Core (8.0.1):
-    - IQKeyboardNotification
-    - IQTextInputViewNotification
-  - IQKeyboardManagerSwift/IQKeyboardReturnManager (8.0.1):
-    - IQKeyboardReturnManager
-  - IQKeyboardManagerSwift/IQKeyboardToolbarManager (8.0.1):
-    - IQKeyboardManagerSwift/Core
-    - IQKeyboardToolbarManager
-  - IQKeyboardManagerSwift/IQTextView (8.0.1):
-    - IQTextView
-  - IQKeyboardManagerSwift/Resign (8.0.1):
-    - IQKeyboardManagerSwift/Core
-  - IQKeyboardNotification (1.0.6)
-  - IQKeyboardReturnManager (1.0.6):
-    - IQKeyboardCore
-  - IQKeyboardToolbar (1.1.3):
-    - IQKeyboardToolbar/Core (= 1.1.3)
-  - IQKeyboardToolbar/Core (1.1.3):
-    - IQKeyboardCore
-    - IQKeyboardToolbar/Placeholderable
-  - IQKeyboardToolbar/Placeholderable (1.1.3)
-  - IQKeyboardToolbarManager (1.1.5):
-    - IQKeyboardToolbar
-    - IQTextInputViewNotification
-  - IQTextInputViewNotification (1.0.9):
-    - IQKeyboardCore
-  - IQTextView (1.0.5):
-    - IQKeyboardToolbar/Placeholderable
   - leveldb-library (1.22.6)
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
@@ -1362,7 +1324,6 @@ DEPENDENCIES:
   - Alamofire (~> 5.9)
   - Firebase/Auth
   - Firebase/Firestore
-  - IQKeyboardManagerSwift
 
 SPEC REPOS:
   trunk:
@@ -1383,14 +1344,6 @@ SPEC REPOS:
     - "gRPC-C++"
     - gRPC-Core
     - GTMSessionFetcher
-    - IQKeyboardCore
-    - IQKeyboardManagerSwift
-    - IQKeyboardNotification
-    - IQKeyboardReturnManager
-    - IQKeyboardToolbar
-    - IQKeyboardToolbarManager
-    - IQTextInputViewNotification
-    - IQTextView
     - leveldb-library
     - nanopb
     - RecaptchaInterop
@@ -1413,18 +1366,10 @@ SPEC CHECKSUMS:
   "gRPC-C++": 2fa52b3141e7789a28a737f251e0c45b4cb20a87
   gRPC-Core: a27c294d6149e1c39a7d173527119cfbc3375ce4
   GTMSessionFetcher: 923b710231ad3d6f3f0495ac1ced35421e07d9a6
-  IQKeyboardCore: 8652977ec919cf5351aa2977fedd1a6546476fbc
-  IQKeyboardManagerSwift: 835fc9c6e4732398113406d84900ad2e8f141218
-  IQKeyboardNotification: eb4910401f5a0e68f97e71c62f8a0c5b7e9d535c
-  IQKeyboardReturnManager: fcbf51fc68d7536fc1fbcca5231c4e82576b12ac
-  IQKeyboardToolbar: 9fe900f8e7def414be4025af0ca098df764d4fe3
-  IQKeyboardToolbarManager: d449479b5843d4a3fb902d03bf62d6ca031ac20e
-  IQTextInputViewNotification: 3b9fb27a16e7ee8958cc9092cfb07a1a9e1fd559
-  IQTextView: ae13b4922f22e6f027f62c557d9f4f236b19d5c7
   leveldb-library: cc8b8f8e013647a295ad3f8cd2ddf49a6f19be19
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   RecaptchaInterop: 7d1a4a01a6b2cb1610a47ef3f85f0c411434cb21
 
-PODFILE CHECKSUM: 3f7045e99f629a80ab7e673ce0010fbf415bc5b3
+PODFILE CHECKSUM: 4f488f278c839d9d3137935c3bc2171472be5bb3
 
 COCOAPODS: 1.16.2
