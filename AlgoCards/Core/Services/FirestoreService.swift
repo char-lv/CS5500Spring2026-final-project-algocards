@@ -66,9 +66,28 @@ class FirestoreService {
                 completion(.success(sorted))
             }
     }
+    
+    // Practice
+    func saveAnswer(_ answer: Answer, userId: String, completion: @escaping (Error?) -> Void) {
+        // document ID = userId_problemId，one answer for one problem
+        let docId = "\(userId)_\(answer.problemId)"
+        do {
+            try submissionsRef.document(docId).setData(from: answer, merge: true) { error in
+                completion(error)
+            }
+        } catch {
+            completion(error)
+        }
+    }
+    
+    func fetchAnswer(userId: String, problemId: String, completion: @escaping (Result<Answer, Error>) -> Void) {
+        let docId = "\(userId)_\(problemId)"
+        submissionsRef.document(docId).getDocument(as: Answer.self) { result in
+            completion(result)
+        }
+    }
 
     // User
-
     func createUser(_ user: User, completion: @escaping (Error?) -> Void) {
         guard let uid = user.id else { return }
         do {

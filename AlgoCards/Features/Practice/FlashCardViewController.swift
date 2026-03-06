@@ -148,7 +148,7 @@ class FlashCardViewController: UIViewController {
 
     private let solvedButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("✅  Got It", for: .normal)
+        btn.setTitle("✅ Got It", for: .normal)
         btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         btn.setTitleColor(.white, for: .normal)
         btn.backgroundColor = .systemGreen
@@ -157,9 +157,21 @@ class FlashCardViewController: UIViewController {
         return btn
     }()
 
+    private let answerButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("📝 My Notes", for: .normal)
+        btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        btn.setTitleColor(.white, for: .normal)
+        btn.backgroundColor = UIColor(red: 196/255, green: 168/255, blue: 130/255, alpha: 1.0)
+        btn.layer.cornerRadius = 14
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+
+
     private let leetcodeButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("🔗  LeetCode", for: .normal)
+        btn.setTitle("🔗 LeetCode", for: .normal)
         btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         btn.setTitleColor(.systemBlue, for: .normal)
         btn.backgroundColor = .systemBlue.withAlphaComponent(0.1)
@@ -182,6 +194,7 @@ class FlashCardViewController: UIViewController {
         title = problem.title
         setupUI()
         setupGestures()
+        setupNavigationBar()
         fetchContent()
     }
 
@@ -189,7 +202,18 @@ class FlashCardViewController: UIViewController {
         super.viewDidAppear(animated)
         becomeFirstResponder()
     }
-
+    
+    private func setupNavigationBar() {
+        let image = UIImage(systemName: "checkmark.circle")
+        let gotItButton = UIBarButtonItem(
+            image: image,
+            style: .done,
+            target: self,
+            action: #selector(onSolvedTapped)
+        )
+        gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+        navigationItem.rightBarButtonItem = gotItButton
+    }
 
     private func setupUI() {
 
@@ -216,7 +240,7 @@ class FlashCardViewController: UIViewController {
         loadingView.addSubview(loadingLabel)
 
 
-        view.addSubview(solvedButton)
+        view.addSubview(answerButton)
         view.addSubview(leetcodeButton)
 
         NSLayoutConstraint.activate([
@@ -224,7 +248,7 @@ class FlashCardViewController: UIViewController {
             cardContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             cardContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cardContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            cardContainer.bottomAnchor.constraint(equalTo: solvedButton.topAnchor, constant: -20),
+            cardContainer.bottomAnchor.constraint(equalTo: answerButton.topAnchor, constant: -20),
 
             frontView.topAnchor.constraint(equalTo: cardContainer.topAnchor),
             frontView.leadingAnchor.constraint(equalTo: cardContainer.leadingAnchor),
@@ -288,18 +312,23 @@ class FlashCardViewController: UIViewController {
             loadingLabel.topAnchor.constraint(equalTo: activityIndicator.bottomAnchor, constant: 12),
             loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor),
 
-            solvedButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-            solvedButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-            solvedButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.45),
-            solvedButton.heightAnchor.constraint(equalToConstant: 52),
+//            solvedButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+//            solvedButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+//            solvedButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.45),
+//            solvedButton.heightAnchor.constraint(equalToConstant: 52),
+            
+            answerButton.bottomAnchor.constraint(equalTo: leetcodeButton.topAnchor, constant: -10),
+            answerButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            answerButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            answerButton.heightAnchor.constraint(equalToConstant: 52),
 
-            leetcodeButton.bottomAnchor.constraint(equalTo: solvedButton.bottomAnchor),
+            leetcodeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            leetcodeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             leetcodeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            leetcodeButton.widthAnchor.constraint(equalTo: solvedButton.widthAnchor),
-            leetcodeButton.heightAnchor.constraint(equalTo: solvedButton.heightAnchor)
+            leetcodeButton.heightAnchor.constraint(equalToConstant: 48),
         ])
 
-        solvedButton.addTarget(self, action: #selector(onSolvedTapped), for: .touchUpInside)
+        answerButton.addTarget(self, action: #selector(onAnswerTapped), for: .touchUpInside)
         leetcodeButton.addTarget(self, action: #selector(onLeetCodeTapped), for: .touchUpInside)
 
         configureDifficultyBadge()
@@ -429,15 +458,14 @@ class FlashCardViewController: UIViewController {
     // Actions
     @objc private func onSolvedTapped() {
         guard let userId = AuthService.shared.currentUserId else {
-            showAlert(title: "Not logged in", message: "Please log in to track your progress.")
+            showAlert(title: "Login Required", message: "Please log in to track your progress.")
             return
         }
         FirestoreService.shared.markProblemSolved(userId: userId, problemId: problem.id) { [weak self] error in
             DispatchQueue.main.async {
                 if error == nil {
-                    self?.solvedButton.setTitle("✅  Marked!", for: .normal)
-                    self?.solvedButton.backgroundColor = .systemGray3
-                    self?.solvedButton.isEnabled = false
+                    self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "checkmark.circle.fill")
+                    self?.navigationItem.rightBarButtonItem?.isEnabled = false
                     UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
             }
@@ -447,5 +475,10 @@ class FlashCardViewController: UIViewController {
     @objc private func onLeetCodeTapped() {
         guard let url = problem.leetcodeURL else { return }
         UIApplication.shared.open(url)
+    }
+    
+    @objc private func onAnswerTapped() {
+        let answerVC = AnswerViewController(problem: problem)
+        navigationController?.pushViewController(answerVC, animated: true)
     }
 }
