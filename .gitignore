@@ -1,0 +1,25 @@
+# Xcode
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# CocoaPods
+Pods/
+
+GoogleService-Info.plist
+*.pem
+
+# macOS
+.DS_Store
+.AppleDouble
+
+# Swift Package Manager
+.build/
+
+# Scripts for problems
+scripts/serviceAccountKey.json
+scripts/node_modules/

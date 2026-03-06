@@ -1,0 +1,19 @@
+# ✅ add/update problems
+node seedProblems.js                          # import all the problems to db
+node seedProblems.js --list blind75           # i.e. only import probelms from list 'blind 75'
+node seedProblems.js --force                  # override everything
+
+# 🗑️ delete a problem
+node seedProblems.js delete --slug two-sum
+
+# ➖ remove a problem from a list
+node seedProblems.js remove --slug two-sum --list hot100
+
+# 📋 view a list by name
+node seedProblems.js list --list blind75
+node seedProblems.js list --list array
+
+# 📊 see stats
+node seedProblems.js stats
+
+# ⚠️ Please DO NOT upload serviceAccountKey.json to git
