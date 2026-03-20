@@ -1,3 +1,8 @@
+// ARCHIVED - This registration flow is not active in the current app.
+// The live sign-up path is: AuthViewController → AuthService.signUp()
+//   which uses FirestoreService.createUser() with the canonical user schema.
+// Note: RegisterFirebaseManager writes a different Firestore schema (solvedQuestions,
+//   answers, comments) that is incompatible with the rest of the app.
 //
 //  RegisterViewController.swift
 //  AlgoCards

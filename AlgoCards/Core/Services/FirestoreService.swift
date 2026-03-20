@@ -117,11 +117,24 @@ class FirestoreService {
         problemId: String,
         completion: @escaping (Error?) -> Void
     ) {
-        usersRef.document(userId).updateData([
-            "solvedProblemIds": FieldValue.arrayUnion([problemId]),
-            "score": FieldValue.increment(Int64(10))
-        ]) { error in
-            completion(error)
+        let userDoc = usersRef.document(userId)
+        userDoc.getDocument { snapshot, error in
+            if let error = error {
+                completion(error)
+                return
+            }
+            let solvedIds = snapshot?.data()?["solvedProblemIds"] as? [String] ?? []
+            guard !solvedIds.contains(problemId) else {
+                // Already solved — no score change, treat as success.
+                completion(nil)
+                return
+            }
+            userDoc.updateData([
+                "solvedProblemIds": FieldValue.arrayUnion([problemId]),
+                "score": FieldValue.increment(Int64(10))
+            ]) { error in
+                completion(error)
+            }
         }
     }
 

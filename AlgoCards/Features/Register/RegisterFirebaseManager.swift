@@ -1,3 +1,12 @@
+// ARCHIVED - This file is not part of the active registration flow.
+// The live sign-up uses AuthService.signUp() → FirestoreService.createUser().
+//
+// SCHEMA CONFLICT WARNING:
+//   This file writes to Firestore with incompatible field names:
+//     "solvedQuestions" (should be "solvedProblemIds")
+//     "answers"         (should be "submissions" collection)
+//     "comments"        (should be "commentIds")
+//   Do not wire this file into the live flow without migrating the schema first.
 //
 //  RegisterFirebaseManager.swift
 //  AlgoCards

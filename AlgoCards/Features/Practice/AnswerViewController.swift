@@ -108,7 +108,7 @@ class AnswerViewController: UIViewController {
         setupUI()
         setupKeyboard()
         configureProblemHeader()
-        // loadExistingAnswer()  // uncomment after Firebase Auth is set up
+        loadExistingAnswer()
     }
 
     override func viewWillDisappear(_ animated: Bool) {
@@ -183,6 +183,18 @@ class AnswerViewController: UIViewController {
             saveButton.trailingAnchor.constraint(equalTo: bottomBar.trailingAnchor, constant: -16),
             saveButton.heightAnchor.constraint(equalToConstant: 44),
         ])
+    }
+
+    private func loadExistingAnswer() {
+        guard let userId = AuthService.shared.currentUserId else { return }
+        FirestoreService.shared.fetchAnswer(userId: userId, problemId: problem.id) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self = self, case .success(let answer) = result else { return }
+                self.textView.text = answer.notes
+                self.placeholderLabel.isHidden = !answer.notes.isEmpty
+                self.charCountLabel.text = "\(answer.notes.count) characters"
+            }
+        }
     }
 
     private func configureProblemHeader() {

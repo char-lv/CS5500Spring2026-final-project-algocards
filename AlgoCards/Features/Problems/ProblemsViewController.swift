@@ -192,7 +192,10 @@ extension ProblemsViewController: UITableViewDelegate {
             return
         }
 
-        let flashCardVC = FlashCardViewController(problem: problem)
+        let flashCardVC = FlashCardViewController(
+            problems: viewModel.filteredProblems,
+            currentIndex: indexPath.row
+        )
         navigationController?.pushViewController(flashCardVC, animated: true)
     }
 }

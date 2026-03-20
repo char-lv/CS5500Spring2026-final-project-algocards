@@ -1,15 +1,11 @@
-//
-//  LoginViewControllerMain.swift
-//  AlgoCards
-//
-//  Created by Jia-Wen Wan on 19/3/26.
-//
+// ARCHIVED - This login flow is not active in the current app.
+// The live auth entry point is: SceneDelegate.showAuth() → AuthViewController.
+// FBSDKLoginKit and GoogleSignIn have been removed from imports because those
+// SDKs are not in the Podfile. Social login is not yet implemented.
 
 import UIKit
 import FirebaseAuth
 import Firebase
-import FBSDKLoginKit
-import GoogleSignIn
 import FirebaseCore
 
 class LoginViewControllerMain: UIViewController {
@@ -78,9 +74,8 @@ class LoginViewControllerMain: UIViewController {
     
     
     func switchMainApp() {
-        // Tell the SceneDelegate to switch to the login screen
         if let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate {
-                    sceneDelegate.switchMainApp()
+            sceneDelegate.showMainApp()
         } else {
             print("SceneDelegate not found")
         }
@@ -125,89 +120,13 @@ class LoginViewControllerMain: UIViewController {
     }
     
     @objc private func onGoogleSignInTapped() {
-        // Ensure the Firebase client ID is available
-        guard let clientID = FirebaseApp.app()?.options.clientID else { return }
-        
-        // Create a Google Sign-In configuration object
-        let config = GIDConfiguration(clientID: clientID)
-        GIDSignIn.sharedInstance.configuration = config
-        
-        // Present the Google Sign-In flow
-        GIDSignIn.sharedInstance.signIn(withPresenting: self) { result, error in
-            if let error = error {
-                self.showAlert(message: "Google Sign-In failed: \(error.localizedDescription)")
-                return
-            }
-            
-            // Retrieve authentication tokens
-            guard let user = result?.user,
-                  let idToken = user.idToken?.tokenString else {
-                self.showAlert(message: "Unable to retrieve Google authentication token.")
-                return
-            }
-            
-            // Create Firebase credential
-            let credential = GoogleAuthProvider.credential(withIDToken: idToken, accessToken: user.accessToken.tokenString)
-            
-            // Sign in with Firebase
-            Auth.auth().signIn(with: credential) { authResult, error in
-                if let error = error {
-                    self.showAlert(message: "Firebase sign-in failed: \(error.localizedDescription)")
-                } else {
-                    let alert = UIAlertController(
-                        title: "Success",
-                        message: "Logged in successfully!",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-                        UserDefaults.standard.set(true, forKey: "isLoggedIn")
-                        self.switchMainApp()
-                    }))
-                    self.present(alert, animated: true)
-                }
-            }
-        }
+        // Not implemented — GoogleSignIn SDK is not installed.
+        showAlert(message: "Google Sign-In is not yet available.")
     }
 
-    
     @objc private func onFacebookSignInTapped() {
-        let loginManager = LoginManager()
-        loginManager.logIn(permissions: ["public_profile", "email"], from: self) { [weak self] result, error in
-            if let error = error {
-                self?.showAlert(message: "Facebook login failed: \(error.localizedDescription)")
-                return
-            }
-
-            guard let result = result, !result.isCancelled else {
-                self?.showAlert(message: "Facebook login cancelled.")
-                return
-            }
-
-            // Get Facebook credential
-            guard let tokenString = AccessToken.current?.tokenString else {
-                self?.showAlert(message: "Failed to retrieve Facebook access token.")
-                return
-            }
-            let credential = FacebookAuthProvider.credential(withAccessToken: tokenString)
-
-            // Sign in with Firebase
-            Auth.auth().signIn(with: credential) { authResult, error in
-                if let error = error {
-                    self?.showAlert(message: "Firebase sign in failed: \(error.localizedDescription)")
-                } else {
-                    let alert = UIAlertController(
-                        title: "Success",
-                        message: "Logged in successfully!",
-                        preferredStyle: .alert
-                    )
-                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { _ in
-                        UserDefaults.standard.set(true, forKey: "isLoggedIn")
-                        self?.switchMainApp()
-                    }))
-                    self?.present(alert, animated: true)
-                }
-            }
-        }
+        // Not implemented — FBSDKLoginKit SDK is not installed.
+        showAlert(message: "Facebook Sign-In is not yet available.")
     }
 
 }
