@@ -450,6 +450,8 @@ class FlashCardViewController: UIViewController {
         )
         btn.tintColor = .systemRed
         navigationItem.leftBarButtonItem = btn
+        // Keep the system back button visible alongside the heart icon.
+        navigationItem.leftItemsSupplementBackButton = true
     }
 
     private func updateLikeButton() {
@@ -519,8 +521,13 @@ class FlashCardViewController: UIViewController {
         NetworkManager.shared.fetchProblemDetail(titleSlug: titleSlug) { [weak self] result in
             defer { group.leave() }
             guard let self else { return }
-            if case .success(let p) = result {
+            switch result {
+            case .success(let p):
                 localFront = self.parseHTML(p.description)
+            case .failure(.premiumQuestion):
+                localFront = "⭐ This is a premium problem.\nDescription not available — open on LeetCode to view."
+            case .failure:
+                break  // localFront stays "", shows generic connection error below
             }
         }
 
