@@ -60,7 +60,20 @@ class HomeViewController: UIViewController {
         super.viewDidLoad()
         view.backgroundColor = .systemGroupedBackground
         navigationItem.title = ""
+        print("[HomeViewController] Loaded — current UID: \(AuthService.shared.currentUserId ?? "nil")")
         setupUI()
+        navigationItem.rightBarButtonItem = UIBarButtonItem(
+            title: "Sign Out",
+            style: .plain,
+            target: self,
+            action: #selector(signOutTapped)
+        )
+    }
+
+    @objc private func signOutTapped() {
+        AuthService.shared.signOut()
+        guard let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate else { return }
+        sceneDelegate.showAuth()
     }
 
     private func setupUI() {
