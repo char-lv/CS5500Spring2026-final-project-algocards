@@ -19,6 +19,8 @@ class FlashCardViewController: UIViewController {
     private var problem: ProblemListItem { problems[currentIndex] }
 
     private var isFlipped = false
+    /// Loaded once on viewDidLoad and updated in-memory on every toggle.
+    private var likedProblemIds = Set<String>()
 
     // MARK: - Card UI
 
@@ -227,7 +229,9 @@ class FlashCardViewController: UIViewController {
         setupUI()
         setupGestures()
         setupNavigationBar()
+        setupLikeButton()
         updateNavButtons()
+        loadLikedProblemIds()
         fetchContent(token: loadToken)
     }
 
@@ -427,9 +431,77 @@ class FlashCardViewController: UIViewController {
         navigationItem.rightBarButtonItem?.image = UIImage(systemName: "checkmark.circle")
         navigationItem.rightBarButtonItem?.isEnabled = true
 
+        // Sync like button from in-memory cache — no Firestore read needed.
+        updateLikeButton()
+
         let token = UUID()
         loadToken = token
         fetchContent(token: token)
+    }
+
+    // MARK: - Like
+
+    private func setupLikeButton() {
+        let btn = UIBarButtonItem(
+            image: UIImage(systemName: "heart"),
+            style: .plain,
+            target: self,
+            action: #selector(likeTapped)
+        )
+        btn.tintColor = .systemRed
+        navigationItem.leftBarButtonItem = btn
+    }
+
+    private func updateLikeButton() {
+        let isLiked = likedProblemIds.contains(problem.id)
+        navigationItem.leftBarButtonItem?.image = UIImage(
+            systemName: isLiked ? "heart.fill" : "heart"
+        )
+    }
+
+    private func loadLikedProblemIds() {
+        guard let userId = AuthService.shared.currentUserId else { return }
+        FirestoreService.shared.fetchLikedProblemIds(userId: userId) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if case .success(let ids) = result {
+                    self.likedProblemIds = Set(ids)
+                }
+                self.updateLikeButton()
+            }
+        }
+    }
+
+    @objc private func likeTapped() {
+        guard let userId = AuthService.shared.currentUserId else {
+            showAlert(title: "Login Required", message: "Please log in to like problems.")
+            return
+        }
+        let problemId = problem.id
+        let isCurrentlyLiked = likedProblemIds.contains(problemId)
+
+        // Optimistic update: reflect the change in UI immediately.
+        if isCurrentlyLiked {
+            likedProblemIds.remove(problemId)
+        } else {
+            likedProblemIds.insert(problemId)
+        }
+        updateLikeButton()
+
+        FirestoreService.shared.setLikeProblem(userId: userId, problemId: problemId, liked: !isCurrentlyLiked) { [weak self] error in
+            guard let error else { return }
+            // Revert the optimistic update on failure.
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if isCurrentlyLiked {
+                    self.likedProblemIds.insert(problemId)
+                } else {
+                    self.likedProblemIds.remove(problemId)
+                }
+                self.updateLikeButton()
+                self.showError(error.localizedDescription)
+            }
+        }
     }
 
     // MARK: - Content Loading

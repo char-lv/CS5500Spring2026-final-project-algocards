@@ -138,6 +138,28 @@ class FirestoreService {
         }
     }
 
+    // Liked Problems
+    func fetchLikedProblemIds(userId: String, completion: @escaping (Result<[String], Error>) -> Void) {
+        usersRef.document(userId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            let ids = snapshot?.data()?["likedProblemIds"] as? [String] ?? []
+            completion(.success(ids))
+        }
+    }
+
+    func setLikeProblem(userId: String, problemId: String, liked: Bool, completion: @escaping (Error?) -> Void) {
+        usersRef.document(userId).updateData([
+            "likedProblemIds": liked
+                ? FieldValue.arrayUnion([problemId])
+                : FieldValue.arrayRemove([problemId])
+        ]) { error in
+            completion(error)
+        }
+    }
+
     // Submissions
     func saveSubmission(_ answer: Answer, completion: @escaping (Error?) -> Void) {
         do {
