@@ -1,3 +1,6 @@
+// ARCHIVED - This landing flow is not active in the current app.
+// The live auth entry point is: SceneDelegate.showAuth() → AuthViewController.
+// Nothing in the live navigation stack routes here.
 //
 //  LogInViewController.swift
 //  AlgoCards

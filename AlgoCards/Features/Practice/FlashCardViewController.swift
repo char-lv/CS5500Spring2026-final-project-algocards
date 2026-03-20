@@ -9,17 +9,26 @@ import UIKit
 
 class FlashCardViewController: UIViewController {
 
-    private let problem: ProblemListItem
+    // MARK: - Data
+
+    private let problems: [ProblemListItem]
+    private var currentIndex: Int
+    /// Guards against stale network responses when the user navigates before a fetch completes.
+    private var loadToken = UUID()
+
+    private var problem: ProblemListItem { problems[currentIndex] }
+
     private var isFlipped = false
-    private var frontContent = ""
-    private var backContent = ""
+    /// Loaded once on viewDidLoad and updated in-memory on every toggle.
+    private var likedProblemIds = Set<String>()
+
+    // MARK: - Card UI
 
     private let cardContainer: UIView = {
         let v = UIView()
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
-
 
     private let frontView: UIView = {
         let v = UIView()
@@ -75,7 +84,6 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
-
     private let backView: UIView = {
         let v = UIView()
         v.backgroundColor = UIColor(red: 0.95, green: 0.97, blue: 1.0, alpha: 1.0)
@@ -121,7 +129,6 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
-
     private let loadingView: UIView = {
         let v = UIView()
         v.backgroundColor = .systemBackground
@@ -145,17 +152,42 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Deck Navigation Buttons
 
-    private let solvedButton: UIButton = {
+    private let prevButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("✅ Got It", for: .normal)
-        btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
-        btn.setTitleColor(.white, for: .normal)
-        btn.backgroundColor = .systemGreen
-        btn.layer.cornerRadius = 14
+        btn.setTitle("◀  Prev", for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        btn.setTitleColor(.label, for: .normal)
+        btn.setTitleColor(.tertiaryLabel, for: .disabled)
+        btn.backgroundColor = .systemGray6
+        btn.layer.cornerRadius = 12
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
+
+    private let nextButton: UIButton = {
+        let btn = UIButton(type: .system)
+        btn.setTitle("Next  ▶", for: .normal)
+        btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
+        btn.setTitleColor(.label, for: .normal)
+        btn.setTitleColor(.tertiaryLabel, for: .disabled)
+        btn.backgroundColor = .systemGray6
+        btn.layer.cornerRadius = 12
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        return btn
+    }()
+
+    private let navButtonStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 12
+        sv.distribution = .fillEqually
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
+    // MARK: - Action Buttons
 
     private let answerButton: UIButton = {
         let btn = UIButton(type: .system)
@@ -168,7 +200,6 @@ class FlashCardViewController: UIViewController {
         return btn
     }()
 
-
     private let leetcodeButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.setTitle("🔗 LeetCode", for: .normal)
@@ -180,13 +211,16 @@ class FlashCardViewController: UIViewController {
         return btn
     }()
 
+    // MARK: - Init
 
-    init(problem: ProblemListItem) {
-        self.problem = problem
+    init(problems: [ProblemListItem], currentIndex: Int) {
+        self.problems = problems
+        self.currentIndex = currentIndex
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
 
+    // MARK: - Lifecycle
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -195,33 +229,24 @@ class FlashCardViewController: UIViewController {
         setupUI()
         setupGestures()
         setupNavigationBar()
-        fetchContent()
+        setupLikeButton()
+        updateNavButtons()
+        loadLikedProblemIds()
+        fetchContent(token: loadToken)
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         becomeFirstResponder()
     }
-    
-    private func setupNavigationBar() {
-        let image = UIImage(systemName: "checkmark.circle")
-        let gotItButton = UIBarButtonItem(
-            image: image,
-            style: .done,
-            target: self,
-            action: #selector(onSolvedTapped)
-        )
-        gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
-        navigationItem.rightBarButtonItem = gotItButton
-    }
+
+    // MARK: - Layout
 
     private func setupUI() {
-
         view.addSubview(cardContainer)
         cardContainer.addSubview(frontView)
         cardContainer.addSubview(backView)
         cardContainer.addSubview(loadingView)
-
 
         frontView.addSubview(frontBadgeLabel)
         frontView.addSubview(frontTitleLabel)
@@ -229,26 +254,32 @@ class FlashCardViewController: UIViewController {
         frontScrollView.addSubview(frontDescriptionLabel)
         frontView.addSubview(frontHintLabel)
 
-
         backView.addSubview(backTitleLabel)
         backView.addSubview(backScrollView)
         backScrollView.addSubview(backContentLabel)
         backView.addSubview(backHintLabel)
 
-
         loadingView.addSubview(activityIndicator)
         loadingView.addSubview(loadingLabel)
 
+        navButtonStack.addArrangedSubview(prevButton)
+        navButtonStack.addArrangedSubview(nextButton)
+        view.addSubview(navButtonStack)
 
         view.addSubview(answerButton)
         view.addSubview(leetcodeButton)
 
-        NSLayoutConstraint.activate([
+        prevButton.addTarget(self, action: #selector(prevTapped), for: .touchUpInside)
+        nextButton.addTarget(self, action: #selector(nextTapped), for: .touchUpInside)
+        answerButton.addTarget(self, action: #selector(onAnswerTapped), for: .touchUpInside)
+        leetcodeButton.addTarget(self, action: #selector(onLeetCodeTapped), for: .touchUpInside)
 
+        NSLayoutConstraint.activate([
+            // Card container fills all space above the nav buttons
             cardContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
             cardContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cardContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            cardContainer.bottomAnchor.constraint(equalTo: answerButton.topAnchor, constant: -20),
+            cardContainer.bottomAnchor.constraint(equalTo: navButtonStack.topAnchor, constant: -16),
 
             frontView.topAnchor.constraint(equalTo: cardContainer.topAnchor),
             frontView.leadingAnchor.constraint(equalTo: cardContainer.leadingAnchor),
@@ -288,7 +319,6 @@ class FlashCardViewController: UIViewController {
             frontHintLabel.bottomAnchor.constraint(equalTo: frontView.bottomAnchor, constant: -16),
             frontHintLabel.centerXAnchor.constraint(equalTo: frontView.centerXAnchor),
 
-
             backTitleLabel.topAnchor.constraint(equalTo: backView.topAnchor, constant: 20),
             backTitleLabel.leadingAnchor.constraint(equalTo: backView.leadingAnchor, constant: 20),
             backTitleLabel.trailingAnchor.constraint(equalTo: backView.trailingAnchor, constant: -20),
@@ -312,11 +342,12 @@ class FlashCardViewController: UIViewController {
             loadingLabel.topAnchor.constraint(equalTo: activityIndicator.bottomAnchor, constant: 12),
             loadingLabel.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor),
 
-//            solvedButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
-//            solvedButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
-//            solvedButton.widthAnchor.constraint(equalTo: view.widthAnchor, multiplier: 0.45),
-//            solvedButton.heightAnchor.constraint(equalToConstant: 52),
-            
+            // Deck navigation buttons sit directly above the action buttons
+            navButtonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            navButtonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            navButtonStack.bottomAnchor.constraint(equalTo: answerButton.topAnchor, constant: -10),
+            navButtonStack.heightAnchor.constraint(equalToConstant: 44),
+
             answerButton.bottomAnchor.constraint(equalTo: leetcodeButton.topAnchor, constant: -10),
             answerButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             answerButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
@@ -328,10 +359,25 @@ class FlashCardViewController: UIViewController {
             leetcodeButton.heightAnchor.constraint(equalToConstant: 48),
         ])
 
-        answerButton.addTarget(self, action: #selector(onAnswerTapped), for: .touchUpInside)
-        leetcodeButton.addTarget(self, action: #selector(onLeetCodeTapped), for: .touchUpInside)
-
         configureDifficultyBadge()
+    }
+
+    private func setupNavigationBar() {
+        let image = UIImage(systemName: "checkmark.circle")
+        let gotItButton = UIBarButtonItem(
+            image: image,
+            style: .done,
+            target: self,
+            action: #selector(onSolvedTapped)
+        )
+        gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+        navigationItem.rightBarButtonItem = gotItButton
+    }
+
+    private func setupGestures() {
+        let tap = UITapGestureRecognizer(target: self, action: #selector(flipCard))
+        cardContainer.addGestureRecognizer(tap)
+        cardContainer.isUserInteractionEnabled = true
     }
 
     private func configureDifficultyBadge() {
@@ -352,68 +398,148 @@ class FlashCardViewController: UIViewController {
         }
     }
 
-    // Gestures
-    private func setupGestures() {
-        let tap = UITapGestureRecognizer(target: self, action: #selector(flipCard))
-        cardContainer.addGestureRecognizer(tap)
-        cardContainer.isUserInteractionEnabled = true
+    // MARK: - Deck Navigation
+
+    private func updateNavButtons() {
+        prevButton.isEnabled = currentIndex > 0
+        nextButton.isEnabled = currentIndex < problems.count - 1
     }
-    
-    private func parseHTML(_ html: String) -> String {
-            guard let data = html.data(using: .utf8),
-                  let attributed = try? NSAttributedString(
-                    data: data,
-                    options: [
-                        .documentType: NSAttributedString.DocumentType.html,
-                        .characterEncoding: String.Encoding.utf8.rawValue
-                    ],
-                    documentAttributes: nil
-                  ) else {
-                return html
-                    .replacingOccurrences(of: "&nbsp;", with: " ")
-                    .replacingOccurrences(of: "&lt;", with: "<")
-                    .replacingOccurrences(of: "&gt;", with: ">")
-                    .replacingOccurrences(of: "&amp;", with: "&")
-                    .replacingOccurrences(of: "&quot;", with: "\"")
-                    .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+
+    @objc private func prevTapped() {
+        guard currentIndex > 0 else { return }
+        currentIndex -= 1
+        loadCurrentProblem()
+    }
+
+    @objc private func nextTapped() {
+        guard currentIndex < problems.count - 1 else { return }
+        currentIndex += 1
+        loadCurrentProblem()
+    }
+
+    private func loadCurrentProblem() {
+        isFlipped = false
+        title = problem.title
+        configureDifficultyBadge()
+        updateNavButtons()
+
+        // Reset scroll positions so the new problem starts at the top
+        frontScrollView.setContentOffset(.zero, animated: false)
+        backScrollView.setContentOffset(.zero, animated: false)
+
+        // Reset "Got It" button for the new card
+        navigationItem.rightBarButtonItem?.image = UIImage(systemName: "checkmark.circle")
+        navigationItem.rightBarButtonItem?.isEnabled = true
+
+        // Sync like button from in-memory cache — no Firestore read needed.
+        updateLikeButton()
+
+        let token = UUID()
+        loadToken = token
+        fetchContent(token: token)
+    }
+
+    // MARK: - Like
+
+    private func setupLikeButton() {
+        let btn = UIBarButtonItem(
+            image: UIImage(systemName: "heart"),
+            style: .plain,
+            target: self,
+            action: #selector(likeTapped)
+        )
+        btn.tintColor = .systemRed
+        navigationItem.leftBarButtonItem = btn
+    }
+
+    private func updateLikeButton() {
+        let isLiked = likedProblemIds.contains(problem.id)
+        navigationItem.leftBarButtonItem?.image = UIImage(
+            systemName: isLiked ? "heart.fill" : "heart"
+        )
+    }
+
+    private func loadLikedProblemIds() {
+        guard let userId = AuthService.shared.currentUserId else { return }
+        FirestoreService.shared.fetchLikedProblemIds(userId: userId) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if case .success(let ids) = result {
+                    self.likedProblemIds = Set(ids)
+                }
+                self.updateLikeButton()
             }
-            return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
         }
+    }
 
+    @objc private func likeTapped() {
+        guard let userId = AuthService.shared.currentUserId else {
+            showAlert(title: "Login Required", message: "Please log in to like problems.")
+            return
+        }
+        let problemId = problem.id
+        let isCurrentlyLiked = likedProblemIds.contains(problemId)
 
-    // Fetch Content
-    private func fetchContent() {
+        // Optimistic update: reflect the change in UI immediately.
+        if isCurrentlyLiked {
+            likedProblemIds.remove(problemId)
+        } else {
+            likedProblemIds.insert(problemId)
+        }
+        updateLikeButton()
+
+        FirestoreService.shared.setLikeProblem(userId: userId, problemId: problemId, liked: !isCurrentlyLiked) { [weak self] error in
+            guard let error else { return }
+            // Revert the optimistic update on failure.
+            DispatchQueue.main.async {
+                guard let self else { return }
+                if isCurrentlyLiked {
+                    self.likedProblemIds.insert(problemId)
+                } else {
+                    self.likedProblemIds.remove(problemId)
+                }
+                self.updateLikeButton()
+                self.showError(error.localizedDescription)
+            }
+        }
+    }
+
+    // MARK: - Content Loading
+
+    private func fetchContent(token: UUID) {
         showLoading(true)
+        // Capture titleSlug now so a later index change doesn't affect this fetch.
+        let titleSlug = problem.titleSlug
 
         let group = DispatchGroup()
+        var localFront = ""
+        var localBack = "No official solution available for this problem.\n\nTry checking Solutions on Leetcode. 🔗"
 
         group.enter()
-        NetworkManager.shared.fetchProblemDetail(titleSlug: problem.titleSlug) { [weak self] result in
+        NetworkManager.shared.fetchProblemDetail(titleSlug: titleSlug) { [weak self] result in
+            defer { group.leave() }
+            guard let self else { return }
             if case .success(let p) = result {
-                self?.frontContent = self?.parseHTML(p.description) ?? ""
+                localFront = self.parseHTML(p.description)
             }
-            group.leave()
         }
-
 
         group.enter()
-        NetworkManager.shared.fetchOfficialSolution(titleSlug: problem.titleSlug) { [weak self] result in
+        NetworkManager.shared.fetchOfficialSolution(titleSlug: titleSlug) { [weak self] result in
+            defer { group.leave() }
+            guard let self else { return }
             if case .success(let content) = result {
-                self?.backContent = self?.parseHTML(content) ?? ""
-            } else {
-                self?.backContent = "No official solution available for this problem.\n\nTry checking Solutions on Leetcode. 🔗"
+                localBack = self.parseHTML(content)
             }
-            group.leave()
         }
-
 
         group.notify(queue: .main) { [weak self] in
-            guard let self = self else { return }
-            self.frontDescriptionLabel.text = self.frontContent.isEmpty
+            // Discard results if the user navigated away before this fetch completed.
+            guard let self = self, self.loadToken == token else { return }
+            self.frontDescriptionLabel.text = localFront.isEmpty
                 ? "Could not load problem. Please check your connection."
-                : self.frontContent
-            self.backContentLabel.text = self.backContent
+                : localFront
+            self.backContentLabel.text = localBack
             self.showLoading(false)
         }
     }
@@ -430,7 +556,8 @@ class FlashCardViewController: UIViewController {
         }
     }
 
-    // Flip Animation
+    // MARK: - Card Flip
+
     @objc func flipCard() {
         let fromView = isFlipped ? backView : frontView
         let toView   = isFlipped ? frontView : backView
@@ -442,11 +569,9 @@ class FlashCardViewController: UIViewController {
             options: [.transitionFlipFromRight, .showHideTransitionViews]
         )
         isFlipped.toggle()
-
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
 
-    // Shake to flip
     override var canBecomeFirstResponder: Bool { true }
 
     override func motionBegan(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
@@ -455,7 +580,8 @@ class FlashCardViewController: UIViewController {
         }
     }
 
-    // Actions
+    // MARK: - Actions
+
     @objc private func onSolvedTapped() {
         guard let userId = AuthService.shared.currentUserId else {
             showAlert(title: "Login Required", message: "Please log in to track your progress.")
@@ -476,9 +602,33 @@ class FlashCardViewController: UIViewController {
         guard let url = problem.leetcodeURL else { return }
         UIApplication.shared.open(url)
     }
-    
+
     @objc private func onAnswerTapped() {
         let answerVC = AnswerViewController(problem: problem)
         navigationController?.pushViewController(answerVC, animated: true)
+    }
+
+    // MARK: - Helpers
+
+    private func parseHTML(_ html: String) -> String {
+        guard let data = html.data(using: .utf8),
+              let attributed = try? NSAttributedString(
+                data: data,
+                options: [
+                    .documentType: NSAttributedString.DocumentType.html,
+                    .characterEncoding: String.Encoding.utf8.rawValue
+                ],
+                documentAttributes: nil
+              ) else {
+            return html
+                .replacingOccurrences(of: "&nbsp;", with: " ")
+                .replacingOccurrences(of: "&lt;", with: "<")
+                .replacingOccurrences(of: "&gt;", with: ">")
+                .replacingOccurrences(of: "&amp;", with: "&")
+                .replacingOccurrences(of: "&quot;", with: "\"")
+                .replacingOccurrences(of: "<[^>]+>", with: "", options: .regularExpression)
+                .trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        return attributed.string.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }

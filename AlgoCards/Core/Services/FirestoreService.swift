@@ -117,9 +117,44 @@ class FirestoreService {
         problemId: String,
         completion: @escaping (Error?) -> Void
     ) {
+        let userDoc = usersRef.document(userId)
+        userDoc.getDocument { snapshot, error in
+            if let error = error {
+                completion(error)
+                return
+            }
+            let solvedIds = snapshot?.data()?["solvedProblemIds"] as? [String] ?? []
+            guard !solvedIds.contains(problemId) else {
+                // Already solved — no score change, treat as success.
+                completion(nil)
+                return
+            }
+            userDoc.updateData([
+                "solvedProblemIds": FieldValue.arrayUnion([problemId]),
+                "score": FieldValue.increment(Int64(10))
+            ]) { error in
+                completion(error)
+            }
+        }
+    }
+
+    // Liked Problems
+    func fetchLikedProblemIds(userId: String, completion: @escaping (Result<[String], Error>) -> Void) {
+        usersRef.document(userId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            let ids = snapshot?.data()?["likedProblemIds"] as? [String] ?? []
+            completion(.success(ids))
+        }
+    }
+
+    func setLikeProblem(userId: String, problemId: String, liked: Bool, completion: @escaping (Error?) -> Void) {
         usersRef.document(userId).updateData([
-            "solvedProblemIds": FieldValue.arrayUnion([problemId]),
-            "score": FieldValue.increment(Int64(10))
+            "likedProblemIds": liked
+                ? FieldValue.arrayUnion([problemId])
+                : FieldValue.arrayRemove([problemId])
         ]) { error in
             completion(error)
         }
