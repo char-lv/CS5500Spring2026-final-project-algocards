@@ -1,5 +1,5 @@
 //
-//  LoginViewController.swift
+//  LoginViewControllerMain.swift
 //  AlgoCards
 //
 //  Created by Jia-Wen Wan on 19/3/26.
