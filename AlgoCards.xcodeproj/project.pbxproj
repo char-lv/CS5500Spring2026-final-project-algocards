@@ -30,6 +30,7 @@
 		CBF45C2B2F5A411C007739CB /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2A2F5A411C007739CB /* HomeViewController.swift */; };
 		CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */; };
 		CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */; };
+		CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -59,6 +60,7 @@
 		CBF45C2A2F5A411C007739CB /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardViewController.swift; sourceTree = "<group>"; };
 		CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerViewController.swift; sourceTree = "<group>"; };
+		CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewController.swift; sourceTree = "<group>"; };
 		E9E01750B4111811F5F646F3 /* Pods-AlgoCards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.release.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -155,6 +157,14 @@
 			path = Profile;
 			sourceTree = "<group>";
 		};
+		CHL45C022F6B0001007739CB /* Leaderboard */ = {
+			isa = PBXGroup;
+			children = (
+				CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */,
+			);
+			path = Leaderboard;
+			sourceTree = "<group>";
+		};
 		CBF3B2D32F516FE90065C963 /* Features */ = {
 			isa = PBXGroup;
 			children = (
@@ -162,6 +172,7 @@
 				CBF3B2D02F516FE90065C963 /* Practice */,
 				CBF3B2D12F516FE90065C963 /* Problems */,
 				CBF3B2D22F516FE90065C963 /* Profile */,
+				CHL45C022F6B0001007739CB /* Leaderboard */,
 			);
 			path = Features;
 			sourceTree = "<group>";
@@ -369,6 +380,7 @@
 				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
 				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,
+				CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

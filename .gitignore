@@ -23,3 +23,4 @@ GoogleService-Info.plist
 # Scripts for problems
 scripts/serviceAccountKey.json
 scripts/node_modules/
+.claude/

@@ -68,6 +68,16 @@ class HomeViewController: UIViewController {
             target: self,
             action: #selector(signOutTapped)
         )
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "trophy"),
+            style: .plain,
+            target: self,
+            action: #selector(leaderboardTapped)
+        )
+    }
+
+    @objc private func leaderboardTapped() {
+        navigationController?.pushViewController(LeaderboardViewController(), animated: true)
     }
 
     @objc private func signOutTapped() {
