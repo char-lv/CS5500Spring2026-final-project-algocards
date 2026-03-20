@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		13F27448A45E2B9B413D0AD5 /* Pods_AlgoCards.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */; };
+		1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1816EDE32F6D33AA007480FE /* AuthViewController.swift */; };
 		CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */; };
 		CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */; };
 		CBD3E2C82F516CFE008663AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CBD3E2C72F516CFE008663AB /* Assets.xcassets */; };
@@ -32,6 +33,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		1816EDE32F6D33AA007480FE /* AuthViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthViewController.swift; sourceTree = "<group>"; };
 		1A3E703F584EB900726A88F9 /* Pods-AlgoCards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.debug.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.debug.xcconfig"; sourceTree = "<group>"; };
 		2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AlgoCards.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		CBD3E2BB2F516CFC008663AB /* AlgoCards.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlgoCards.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -121,6 +123,7 @@
 		CBF3B2CF2F516FE90065C963 /* Auth */ = {
 			isa = PBXGroup;
 			children = (
+				1816EDE32F6D33AA007480FE /* AuthViewController.swift */,
 			);
 			path = Auth;
 			sourceTree = "<group>";
@@ -364,6 +367,7 @@
 				CBF3B2ED2F51836E0065C963 /* User.swift in Sources */,
 				CBF45C1D2F58D612007739CB /* APIConfigs.swift in Sources */,
 				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
+				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -499,7 +503,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = JAQPA4474X;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AlgoCards/Resources/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -534,7 +538,7 @@
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = JAQPA4474X;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = AlgoCards/Resources/Info.plist;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
