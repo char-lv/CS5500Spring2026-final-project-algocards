@@ -17,6 +17,9 @@ class HomeViewController: UIViewController {
         ("Hot 100",   "hot100",  "🔥", .systemRed),
     ]
 
+    private var isDailyLoading = false
+    private weak var dailyCardButton: UIButton?
+
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
         sv.showsVerticalScrollIndicator = false
@@ -104,7 +107,12 @@ class HomeViewController: UIViewController {
         ])
 
         buildHeader()
-        
+
+        // Daily Challenge
+        buildSection(title: "⚡ Daily Challenge") {
+            self.makeDailyChallengeCard()
+        }
+
         // Curated Lists
         buildSection(title: "📚 Curated Lists") {
             self.buildCuratedGrid()
@@ -246,6 +254,91 @@ class HomeViewController: UIViewController {
             stack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
         ])
         return card
+    }
+
+    // MARK: - Daily Challenge
+
+    private func makeDailyChallengeCard() -> UIView {
+        let btn = UIButton(type: .system)
+        btn.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.12)
+        btn.layer.cornerRadius = 16
+        btn.addTarget(self, action: #selector(dailyTapped), for: .touchUpInside)
+
+        let iconLabel = UILabel()
+        iconLabel.text = "⚡"
+        iconLabel.font = UIFont.systemFont(ofSize: 28)
+        iconLabel.isUserInteractionEnabled = false
+
+        let titleLabel = UILabel()
+        titleLabel.text = "Today's Challenge"
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 16)
+        titleLabel.textColor = .label
+
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = "Tap to solve today's problem"
+        subtitleLabel.font = UIFont.systemFont(ofSize: 13)
+        subtitleLabel.textColor = .secondaryLabel
+
+        let textStack = UIStackView(arrangedSubviews: [titleLabel, subtitleLabel])
+        textStack.axis = .vertical
+        textStack.spacing = 2
+
+        let spinner = UIActivityIndicatorView(style: .medium)
+        spinner.hidesWhenStopped = true
+        spinner.tag = 42
+
+        let row = UIStackView(arrangedSubviews: [iconLabel, textStack, UIView(), spinner])
+        row.axis = .horizontal
+        row.spacing = 12
+        row.alignment = .center
+        row.isUserInteractionEnabled = false
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        btn.addSubview(row)
+        NSLayoutConstraint.activate([
+            btn.heightAnchor.constraint(equalToConstant: 80),
+            row.leadingAnchor.constraint(equalTo: btn.leadingAnchor, constant: 16),
+            row.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -16),
+            row.centerYAnchor.constraint(equalTo: btn.centerYAnchor),
+        ])
+
+        dailyCardButton = btn
+        return btn
+    }
+
+    @objc private func dailyTapped() {
+        guard !isDailyLoading else { return }
+        isDailyLoading = true
+        dailyCardButton?.isEnabled = false
+        (dailyCardButton?.viewWithTag(42) as? UIActivityIndicatorView)?.startAnimating()
+
+        NetworkManager.shared.fetchDailyProblem { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+                self.isDailyLoading = false
+                self.dailyCardButton?.isEnabled = true
+                (self.dailyCardButton?.viewWithTag(42) as? UIActivityIndicatorView)?.stopAnimating()
+
+                switch result {
+                case .success(let problem):
+                    let listItem = ProblemListItem(
+                        id: problem.id,
+                        title: problem.title,
+                        titleSlug: problem.titleSlug,
+                        difficulty: problem.difficulty,
+                        acRate: 0.0,
+                        isPaidOnly: false,
+                        hasSolution: true,
+                        topicTags: []
+                    )
+                    let vc = FlashCardViewController(problems: [listItem], currentIndex: 0)
+                    self.navigationController?.pushViewController(vc, animated: true)
+                case .failure:
+                    self.showAlert(title: "Could not load daily problem",
+                                   message: "Please check your connection and try again.")
+                }
+            }
+        }
     }
 
     @objc private func curatedTapped(_ sender: UIButton) {
