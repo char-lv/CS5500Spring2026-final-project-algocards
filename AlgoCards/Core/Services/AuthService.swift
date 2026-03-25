@@ -53,6 +53,18 @@ class AuthService {
         }
     }
 
+    func resetPassword(email: String, completion: @escaping (Error?) -> Void) {
+        print("[AuthService] Sending password reset email to: \(email)")
+        Auth.auth().sendPasswordReset(withEmail: email) { error in
+            if let error = error {
+                print("[AuthService] Password reset failed: \(error.localizedDescription)")
+            } else {
+                print("[AuthService] Password reset email sent.")
+            }
+            completion(error)
+        }
+    }
+
     func signOut() {
         print("[AuthService] Signing out — current UID: \(currentUserId ?? "nil")")
         try? Auth.auth().signOut()

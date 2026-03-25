@@ -80,6 +80,16 @@ class AuthViewController: UIViewController {
         return b
     }()
 
+    private let forgotPasswordButton: UIButton = {
+        let b = UIButton(type: .system)
+        b.setTitle("Forgot Password?", for: .normal)
+        b.setTitleColor(.secondaryLabel, for: .normal)
+        b.titleLabel?.font = .systemFont(ofSize: 14)
+        b.contentHorizontalAlignment = .trailing
+        b.translatesAutoresizingMaskIntoConstraints = false
+        return b
+    }()
+
     private let activityIndicator: UIActivityIndicatorView = {
         let ai = UIActivityIndicatorView(style: .medium)
         ai.hidesWhenStopped = true
@@ -95,6 +105,7 @@ class AuthViewController: UIViewController {
         setupUI()
         loginButton.addTarget(self, action: #selector(loginTapped), for: .touchUpInside)
         signUpButton.addTarget(self, action: #selector(signUpTapped), for: .touchUpInside)
+        forgotPasswordButton.addTarget(self, action: #selector(forgotPasswordTapped), for: .touchUpInside)
         let tap = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
         view.addGestureRecognizer(tap)
     }
@@ -115,6 +126,7 @@ class AuthViewController: UIViewController {
         view.addSubview(titleLabel)
         view.addSubview(subtitleLabel)
         view.addSubview(fieldStack)
+        view.addSubview(forgotPasswordButton)
         view.addSubview(buttonStack)
         view.addSubview(activityIndicator)
 
@@ -135,7 +147,10 @@ class AuthViewController: UIViewController {
             passwordField.heightAnchor.constraint(equalToConstant: 48),
             usernameField.heightAnchor.constraint(equalToConstant: 48),
 
-            buttonStack.topAnchor.constraint(equalTo: fieldStack.bottomAnchor, constant: 24),
+            forgotPasswordButton.topAnchor.constraint(equalTo: fieldStack.bottomAnchor, constant: 8),
+            forgotPasswordButton.trailingAnchor.constraint(equalTo: fieldStack.trailingAnchor),
+
+            buttonStack.topAnchor.constraint(equalTo: forgotPasswordButton.bottomAnchor, constant: 16),
             buttonStack.leadingAnchor.constraint(equalTo: fieldStack.leadingAnchor),
             buttonStack.trailingAnchor.constraint(equalTo: fieldStack.trailingAnchor),
 
@@ -196,6 +211,44 @@ class AuthViewController: UIViewController {
                 }
             }
         }
+    }
+
+    @objc private func forgotPasswordTapped() {
+        let alert = UIAlertController(
+            title: "Reset Password",
+            message: "Enter your email address and we'll send you a link to reset your password.",
+            preferredStyle: .alert
+        )
+        alert.addTextField { tf in
+            tf.placeholder = "Email"
+            tf.keyboardType = .emailAddress
+            tf.autocapitalizationType = .none
+            tf.autocorrectionType = .no
+        }
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Send", style: .default) { [weak self] _ in
+            let email = alert.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !email.isEmpty else {
+                self?.showAuthError("Please enter your email address.")
+                return
+            }
+            AuthService.shared.resetPassword(email: email) { error in
+                DispatchQueue.main.async {
+                    if let error = error {
+                        self?.showAuthError(error.localizedDescription)
+                    } else {
+                        let confirmation = UIAlertController(
+                            title: "Email Sent",
+                            message: "A password reset link has been sent to \(email). Please check your inbox.",
+                            preferredStyle: .alert
+                        )
+                        confirmation.addAction(UIAlertAction(title: "OK", style: .default))
+                        self?.present(confirmation, animated: true)
+                    }
+                }
+            }
+        })
+        present(alert, animated: true)
     }
 
     @objc private func dismissKeyboard() {

@@ -2,7 +2,7 @@
 //  RecommendationService.swift
 //  AlgoCards
 //
-//  Created by Codex on 3/24/26.
+//  Created by Cici Zhao on 3/24/26.
 //
 
 import Foundation
