@@ -516,6 +516,7 @@ class FlashCardViewController: UIViewController {
         let group = DispatchGroup()
         var localFront = ""
         var localBack = "No official solution available for this problem.\n\nTry checking Solutions on Leetcode. 🔗"
+        var localFrontErrorMessage = "Could not load problem. Please check your connection."
 
         group.enter()
         NetworkManager.shared.fetchProblemDetail(titleSlug: titleSlug) { [weak self] result in
@@ -526,8 +527,8 @@ class FlashCardViewController: UIViewController {
                 localFront = self.parseHTML(p.description)
             case .failure(.premiumQuestion):
                 localFront = "⭐ This is a premium problem.\nDescription not available — open on LeetCode to view."
-            case .failure:
-                break  // localFront stays "", shows generic connection error below
+            case .failure(let error):
+                localFrontErrorMessage = error.localizedDescription
             }
         }
 
@@ -544,7 +545,7 @@ class FlashCardViewController: UIViewController {
             // Discard results if the user navigated away before this fetch completed.
             guard let self = self, self.loadToken == token else { return }
             self.frontDescriptionLabel.text = localFront.isEmpty
-                ? "Could not load problem. Please check your connection."
+                ? localFrontErrorMessage
                 : localFront
             self.backContentLabel.text = localBack
             self.showLoading(false)
