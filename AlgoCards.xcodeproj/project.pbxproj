@@ -30,6 +30,7 @@
 		CBF45C2B2F5A411C007739CB /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2A2F5A411C007739CB /* HomeViewController.swift */; };
 		CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */; };
 		CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */; };
+		D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A1C0023A24A10000000001 /* RecommendationService.swift */; };
 		CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,6 +38,9 @@
 		1816EDE32F6D33AA007480FE /* AuthViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthViewController.swift; sourceTree = "<group>"; };
 		1A3E703F584EB900726A88F9 /* Pods-AlgoCards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.debug.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.debug.xcconfig"; sourceTree = "<group>"; };
 		2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AlgoCards.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		AC1000013A24B00000000001 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
+		AC1000023A24B00000000001 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		AC1000033A24B00000000001 /* LocalSecrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LocalSecrets.xcconfig.example; sourceTree = "<group>"; };
 		CBD3E2BB2F516CFC008663AB /* AlgoCards.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = AlgoCards.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -60,6 +64,7 @@
 		CBF45C2A2F5A411C007739CB /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardViewController.swift; sourceTree = "<group>"; };
 		CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerViewController.swift; sourceTree = "<group>"; };
+		D1A1C0023A24A10000000001 /* RecommendationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationService.swift; sourceTree = "<group>"; };
 		CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewController.swift; sourceTree = "<group>"; };
 		E9E01750B4111811F5F646F3 /* Pods-AlgoCards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.release.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -93,11 +98,22 @@
 			path = Pods;
 			sourceTree = "<group>";
 		};
+		AC1000043A24B00000000001 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				AC1000013A24B00000000001 /* Debug.xcconfig */,
+				AC1000023A24B00000000001 /* Release.xcconfig */,
+				AC1000033A24B00000000001 /* LocalSecrets.xcconfig.example */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
 		CBD3E2B22F516CFC008663AB = {
 			isa = PBXGroup;
 			children = (
 				CBD3E2BD2F516CFC008663AB /* AlgoCards */,
 				CBD3E2BC2F516CFC008663AB /* Products */,
+				AC1000043A24B00000000001 /* Config */,
 				AB6F37321EFAB97D8A9FC8BB /* Pods */,
 				3CFABC8766F9BDADA5D19A9C /* Frameworks */,
 			);
@@ -231,6 +247,7 @@
 				CBF45C1E2F58D696007739CB /* NetworkManager.swift */,
 				CBF45C242F58E122007739CB /* AuthService.swift */,
 				CBF45C262F58E147007739CB /* FirestoreService.swift */,
+				D1A1C0023A24A10000000001 /* RecommendationService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -370,6 +387,7 @@
 				CBF45C2B2F5A411C007739CB /* HomeViewController.swift in Sources */,
 				CBF3B2EB2F5183600065C963 /* Problem.swift in Sources */,
 				CBF45C292F58E2BA007739CB /* ProblemsViewController.swift in Sources */,
+				D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */,
 				CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */,
 				CBF3B2F12F5183820065C963 /* Comment.swift in Sources */,
 				CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */,
@@ -508,7 +526,7 @@
 		};
 		CBD3E2D02F516CFE008663AB /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = 1A3E703F584EB900726A88F9 /* Pods-AlgoCards.debug.xcconfig */;
+			baseConfigurationReference = AC1000013A24B00000000001 /* Debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
@@ -543,7 +561,7 @@
 		};
 		CBD3E2D12F516CFE008663AB /* Release */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = E9E01750B4111811F5F646F3 /* Pods-AlgoCards.release.xcconfig */;
+			baseConfigurationReference = AC1000023A24B00000000001 /* Release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;

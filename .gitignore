@@ -9,6 +9,7 @@ DerivedData/
 
 # CocoaPods
 Pods/
+Config/LocalSecrets.xcconfig
 
 GoogleService-Info.plist
 *.pem

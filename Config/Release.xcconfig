@@ -1,0 +1,6 @@
+#include "../Pods/Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"
+
+OPENAI_API_KEY =
+OPENAI_RECOMMENDATION_MODEL = gpt-4.1-mini
+
+#include? "LocalSecrets.xcconfig"

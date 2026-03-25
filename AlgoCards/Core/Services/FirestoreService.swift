@@ -36,28 +36,7 @@ class FirestoreService {
                     return
                 }
                 let problems = snapshot?.documents.compactMap { doc -> ProblemListItem? in
-                    let data = doc.data()
-                    guard
-                        let id           = data["questionFrontendId"] as? String,
-                        let title        = data["title"] as? String,
-                        let titleSlug    = data["titleSlug"] as? String,
-                        let diffStr      = data["difficulty"] as? String,
-                        let difficulty   = Difficulty(rawValue: diffStr),
-                        let acRate       = data["acRate"] as? Double,
-                        let isPaidOnly   = data["isPaidOnly"] as? Bool,
-                        let hasSolution  = data["hasSolution"] as? Bool
-                    else { return nil }
-
-                    return ProblemListItem(
-                        id: id,
-                        title: title,
-                        titleSlug: titleSlug,
-                        difficulty: difficulty,
-                        acRate: acRate,
-                        isPaidOnly: isPaidOnly,
-                        hasSolution: hasSolution,
-                        topicTags: []
-                    )
+                    self.makeProblemCatalogItem(from: doc.data())?.problem
                 } ?? []
 
                 let sorted = problems.sorted {
@@ -65,6 +44,26 @@ class FirestoreService {
                 }
                 completion(.success(sorted))
             }
+    }
+
+    func fetchAllProblemCatalogItems(
+        completion: @escaping (Result<[ProblemCatalogItem], Error>) -> Void
+    ) {
+        problemsRef.getDocuments { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            let items = snapshot?.documents.compactMap { doc -> ProblemCatalogItem? in
+                self.makeProblemCatalogItem(from: doc.data())
+            } ?? []
+
+            let sorted = items.sorted {
+                (Int($0.problem.id) ?? 0) < (Int($1.problem.id) ?? 0)
+            }
+            completion(.success(sorted))
+        }
     }
     
     // Practice
@@ -107,6 +106,54 @@ class FirestoreService {
 
     func updateUserName(userId: String, newName: String, completion: @escaping (Error?) -> Void) {
         usersRef.document(userId).updateData(["userName": newName]) { error in
+            completion(error)
+        }
+    }
+
+    func fetchAIRecommendationUsage(
+        userId: String,
+        completion: @escaping (Result<AIRecommendationUsageState, Error>) -> Void
+    ) {
+        usersRef.document(userId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            let data = snapshot?.data() ?? [:]
+            let usageState = AIRecommendationUsageState(
+                dateKey: data["aiRecommendationUsageDate"] as? String,
+                count: data["aiRecommendationUsageCount"] as? Int ?? 0
+            )
+            completion(.success(usageState))
+        }
+    }
+
+    func recordAIRecommendationUsage(
+        userId: String,
+        dateKey: String,
+        completion: @escaping (Error?) -> Void
+    ) {
+        let userDoc = usersRef.document(userId)
+
+        db.runTransaction({ transaction, errorPointer in
+            do {
+                let snapshot = try transaction.getDocument(userDoc)
+                let data = snapshot.data() ?? [:]
+                let previousDate = data["aiRecommendationUsageDate"] as? String
+                let previousCount = data["aiRecommendationUsageCount"] as? Int ?? 0
+                let nextCount = previousDate == dateKey ? previousCount + 1 : 1
+
+                transaction.setData([
+                    "aiRecommendationUsageDate": dateKey,
+                    "aiRecommendationUsageCount": nextCount
+                ], forDocument: userDoc, merge: true)
+            } catch {
+                errorPointer?.pointee = error as NSError
+            }
+
+            return nil
+        }) { _, error in
             completion(error)
         }
     }
@@ -235,5 +282,32 @@ class FirestoreService {
         } catch {
             completion(error)
         }
+    }
+
+    private func makeProblemCatalogItem(from data: [String: Any]) -> ProblemCatalogItem? {
+        guard
+            let id = data["questionFrontendId"] as? String,
+            let title = data["title"] as? String,
+            let titleSlug = data["titleSlug"] as? String,
+            let diffStr = data["difficulty"] as? String,
+            let difficulty = Difficulty(rawValue: diffStr),
+            let acRate = data["acRate"] as? Double,
+            let isPaidOnly = data["isPaidOnly"] as? Bool,
+            let hasSolution = data["hasSolution"] as? Bool
+        else { return nil }
+
+        let listTags = data["listTags"] as? [String] ?? []
+        let problem = ProblemListItem(
+            id: id,
+            title: title,
+            titleSlug: titleSlug,
+            difficulty: difficulty,
+            acRate: acRate,
+            isPaidOnly: isPaidOnly,
+            hasSolution: hasSolution,
+            topicTags: []
+        )
+
+        return ProblemCatalogItem(problem: problem, listTags: listTags)
     }
 }
