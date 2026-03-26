@@ -18,8 +18,10 @@ class HomeViewController: UIViewController {
     }
 
     private let defaultCuratedDecks: [DeckCardItem] = [
+        DeckCardItem(title: "Favorites", tag: ProblemDeckConfig.favoritesTag, icon: "❤️", color: .systemPink),
         DeckCardItem(title: "Blind 75", tag: "blind75", icon: "🎯", color: .systemPurple),
-        DeckCardItem(title: "Hot 100", tag: "hot100", icon: "🔥", color: .systemRed)
+        DeckCardItem(title: "Hot 100", tag: "hot100", icon: "🔥", color: .systemRed),
+        DeckCardItem(title: "Interview 150", tag: "interview150", icon: "💼", color: .systemBlue)
     ]
     private let recommendationService = RecommendationService.shared
 
@@ -333,21 +335,24 @@ class HomeViewController: UIViewController {
     private func renderCuratedGrid() {
         clearArrangedSubviews(in: curatedGridContainer)
 
-        let stack = UIStackView()
-        stack.axis = .horizontal
-        stack.spacing = 12
-        stack.distribution = .fillEqually
+        curatedDecks.chunked(into: 2).enumerated().forEach { rowIndex, row in
+            let rowStack = UIStackView()
+            rowStack.axis = .horizontal
+            rowStack.spacing = 12
+            rowStack.distribution = .fillEqually
 
-        curatedDecks.enumerated().forEach { index, item in
-            let card = makeCuratedCard(item, index: index)
-            stack.addArrangedSubview(card)
+            row.enumerated().forEach { offset, item in
+                let absoluteIndex = (rowIndex * 2) + offset
+                let card = makeCuratedCard(item, index: absoluteIndex)
+                rowStack.addArrangedSubview(card)
+            }
+
+            if row.count == 1 {
+                rowStack.addArrangedSubview(UIView())
+            }
+
+            curatedGridContainer.addArrangedSubview(rowStack)
         }
-
-        if curatedDecks.count == 1 {
-            stack.addArrangedSubview(UIView())
-        }
-
-        curatedGridContainer.addArrangedSubview(stack)
     }
 
     private func makeCuratedCard(
@@ -553,6 +558,14 @@ class HomeViewController: UIViewController {
     @objc private func curatedTapped(_ sender: UIButton) {
         guard curatedDecks.indices.contains(sender.tag) else { return }
         let item = curatedDecks[sender.tag]
+
+        if item.tag == ProblemDeckConfig.favoritesTag,
+           AuthService.shared.currentUserId == nil {
+            showAlert(title: "Login Required",
+                      message: "Log in to save favorite problems and review them here.")
+            return
+        }
+
         let vc = ProblemsViewController(listTag: item.tag, title: item.title)
         navigationController?.pushViewController(vc, animated: true)
     }
@@ -594,6 +607,9 @@ class HomeViewController: UIViewController {
         let countsByTag = Dictionary(uniqueKeysWithValues: stats.map { ($0.tag, $0.count) })
 
         return ProblemDeckConfig.curatedHomeTags.compactMap { tag in
+            if tag == ProblemDeckConfig.favoritesTag {
+                return makeDeckCardItem(for: tag)
+            }
             guard countsByTag[tag, default: 0] > 0 else { return nil }
             return makeDeckCardItem(for: tag)
         }
@@ -644,8 +660,10 @@ class HomeViewController: UIViewController {
 
     private func icon(for tag: String) -> String {
         switch tag {
+        case ProblemDeckConfig.favoritesTag: return "❤️"
         case "blind75": return "🎯"
         case "hot100": return "🔥"
+        case "interview150": return "💼"
         case "array": return "🔢"
         case "string": return "🔤"
         case "sliding-window": return "🪟"
@@ -666,8 +684,10 @@ class HomeViewController: UIViewController {
 
     private func color(for tag: String) -> UIColor {
         switch tag {
+        case ProblemDeckConfig.favoritesTag: return .systemPink
         case "blind75": return .systemPurple
         case "hot100": return .systemRed
+        case "interview150": return .systemBlue
         case "array": return .systemBlue
         case "string": return .systemIndigo
         case "sliding-window": return .systemTeal

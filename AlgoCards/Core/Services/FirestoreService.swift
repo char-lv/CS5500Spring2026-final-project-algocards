@@ -51,6 +51,64 @@ class FirestoreService {
             }
     }
 
+    func fetchProblems(frontendIds: [String], completion: @escaping (Result<[ProblemListItem], Error>) -> Void) {
+        let normalizedIds = frontendIds
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        guard !normalizedIds.isEmpty else {
+            completion(.success([]))
+            return
+        }
+
+        let orderLookup = Dictionary(uniqueKeysWithValues: normalizedIds.enumerated().map { ($1, $0) })
+        let chunks = stride(from: 0, to: normalizedIds.count, by: 10).map {
+            Array(normalizedIds[$0..<Swift.min($0 + 10, normalizedIds.count)])
+        }
+
+        let group = DispatchGroup()
+        var collectedProblems: [ProblemListItem] = []
+        var firstError: Error?
+        let lockQueue = DispatchQueue(label: "com.algocards.firestore.favorite-problems")
+
+        for chunk in chunks {
+            group.enter()
+            problemsRef
+                .whereField("questionFrontendId", in: chunk)
+                .getDocuments { snapshot, error in
+                    lockQueue.async {
+                        defer { group.leave() }
+
+                        if let error, firstError == nil {
+                            firstError = error
+                            return
+                        }
+
+                        let problems = snapshot?.documents.compactMap { doc -> ProblemListItem? in
+                            self.makeProblemCatalogItem(from: doc.data())?.problem
+                        } ?? []
+
+                        collectedProblems.append(contentsOf: problems)
+                    }
+                }
+        }
+
+        group.notify(queue: .global(qos: .userInitiated)) {
+            if let firstError {
+                completion(.failure(firstError))
+                return
+            }
+
+            let uniqueProblems = Dictionary(uniqueKeysWithValues: collectedProblems.map { ($0.id, $0) })
+            let sorted = uniqueProblems.values.sorted { lhs, rhs in
+                let leftOrder = orderLookup[lhs.id] ?? Int.max
+                let rightOrder = orderLookup[rhs.id] ?? Int.max
+                return leftOrder < rightOrder
+            }
+            completion(.success(sorted))
+        }
+    }
+
     func fetchAllProblemCatalogItems(
         completion: @escaping (Result<[ProblemCatalogItem], Error>) -> Void
     ) {

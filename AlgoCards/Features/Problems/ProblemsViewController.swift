@@ -189,7 +189,7 @@ class ProblemsViewController: UIViewController {
         progressLabel.textColor = accentColor
         progressLabel.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.82)
         searchBar.placeholder = searchPlaceholder(for: deckTitleText)
-        emptyLabel.text = "No problems match the current filters."
+        emptyLabel.text = emptyStateText(for: listTag)
     }
 
 
@@ -231,8 +231,10 @@ class ProblemsViewController: UIViewController {
 
     private func icon(for tag: String) -> String {
         switch tag {
+        case ProblemDeckConfig.favoritesTag: return "❤️"
         case "blind75": return "🎯"
         case "hot100": return "🔥"
+        case "interview150": return "💼"
         case "array": return "🔢"
         case "string": return "🔤"
         case "sliding-window": return "🪟"
@@ -255,8 +257,10 @@ class ProblemsViewController: UIViewController {
 
     private func accentColor(for tag: String) -> UIColor {
         switch tag {
+        case ProblemDeckConfig.favoritesTag: return .systemPink
         case "blind75": return .systemPurple
         case "hot100": return .systemRed
+        case "interview150": return .systemBlue
         case "array": return .systemBlue
         case "string": return .systemIndigo
         case "sliding-window": return .systemTeal
@@ -279,10 +283,14 @@ class ProblemsViewController: UIViewController {
 
     private func descriptionText(for tag: String, title: String) -> String {
         switch tag {
+        case ProblemDeckConfig.favoritesTag:
+            return "Save the problems you want to revisit, then come back here for focused review sessions."
         case "blind75":
             return "A focused interview deck covering the highest-signal classics across the most important patterns."
         case "hot100":
             return "A broad set of popular interview problems with strong coverage across frequently tested techniques."
+        case "interview150":
+            return "A broad interview prep deck modeled after LeetCode's classic Top Interview 150 study plan."
         case "linked-list":
             return "Practice pointer movement, in-place updates, and structural transformations on linked data."
         case "dynamic-programming":
@@ -308,6 +316,16 @@ class ProblemsViewController: UIViewController {
 
     private func searchPlaceholder(for title: String) -> String {
         "Search \(title) by title or number..."
+    }
+
+    private func emptyStateText(for tag: String) -> String {
+        if tag == ProblemDeckConfig.favoritesTag {
+            return AuthService.shared.currentUserId == nil
+                ? "Log in to save favorite problems and build your review deck."
+                : "Tap the heart on any problem you want to revisit, and it will appear here."
+        }
+
+        return "No problems match the current filters."
     }
 }
 

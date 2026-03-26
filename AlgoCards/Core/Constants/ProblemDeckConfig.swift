@@ -15,7 +15,8 @@ enum DifficultyFilter: String {
 
 enum ProblemDeckConfig {
 
-    static let curatedHomeTags = ["blind75", "hot100"]
+    static let favoritesTag = "favorites"
+    static let curatedHomeTags = [favoritesTag, "blind75", "hot100", "interview150"]
     static let featuredHomeCategoryTags = [
         "array",
         "string",
@@ -73,10 +74,14 @@ enum ProblemDeckConfig {
         }
 
         switch tag {
+        case favoritesTag:
+            return "Favorites"
         case "blind75":
             return "Blind 75"
         case "hot100":
             return "Hot 100"
+        case "interview150":
+            return "Interview 150"
         default:
             return tag
                 .split(separator: "-")

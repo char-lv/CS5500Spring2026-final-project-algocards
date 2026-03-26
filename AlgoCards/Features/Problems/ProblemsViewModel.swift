@@ -25,6 +25,11 @@ class ProblemsViewModel {
         isLoading = true
         onProblemsUpdated?()
 
+        if listTag == ProblemDeckConfig.favoritesTag {
+            loadFavoriteProblems(difficulty: difficulty)
+            return
+        }
+
         FirestoreService.shared.fetchProblems(listTag: listTag) { [weak self] result in
             DispatchQueue.main.async {
                 self?.isLoading = false
@@ -33,6 +38,40 @@ class ProblemsViewModel {
                     self?.allProblems = problems
                     self?.applyDifficultyFilter(difficulty)
                 case .failure(let error):
+                    self?.onError?(error.localizedDescription)
+                }
+            }
+        }
+    }
+
+    private func loadFavoriteProblems(difficulty: DifficultyFilter?) {
+        guard let userId = AuthService.shared.currentUserId else {
+            DispatchQueue.main.async { [weak self] in
+                self?.isLoading = false
+                self?.allProblems = []
+                self?.applyDifficultyFilter(difficulty)
+            }
+            return
+        }
+
+        FirestoreService.shared.fetchLikedProblemIds(userId: userId) { [weak self] result in
+            switch result {
+            case .success(let ids):
+                FirestoreService.shared.fetchProblems(frontendIds: ids) { nestedResult in
+                    DispatchQueue.main.async {
+                        self?.isLoading = false
+                        switch nestedResult {
+                        case .success(let problems):
+                            self?.allProblems = problems
+                            self?.applyDifficultyFilter(difficulty)
+                        case .failure(let error):
+                            self?.onError?(error.localizedDescription)
+                        }
+                    }
+                }
+            case .failure(let error):
+                DispatchQueue.main.async {
+                    self?.isLoading = false
                     self?.onError?(error.localizedDescription)
                 }
             }
