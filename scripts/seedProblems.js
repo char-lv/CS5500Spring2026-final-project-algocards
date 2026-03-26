@@ -1,5 +1,6 @@
 const admin = require("firebase-admin");
 const serviceAccount = require("./serviceAccountKey.json");
+const curatedProblemSets = require("./curatedProblemSets");
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -8,7 +9,7 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const args = process.argv.slice(2);
-const command = args[0]; // seed | delete | list | stats
+const command = args[0];
 const listFilter = getFlagValue("--list");
 const forceOverwrite = args.includes("--force");
 const dryRun = args.includes("--dry-run");
@@ -178,13 +179,16 @@ async function buildProblemCatalog() {
     liveProblems: fetchedProblems,
     manualProblems,
   });
+  const taggedProblems = applyCuratedListTags(mergedProblems);
 
   console.log(
-    `🧩 Catalog ready: ${mergedProblems.length} total problems ` +
+    `🧩 Catalog ready: ${taggedProblems.length} total problems ` +
     `(${fetchedProblems.length} live + ${manualProblems.length} manual curated entries).`
   );
 
-  return mergedProblems;
+  logCuratedCoverage(taggedProblems);
+
+  return taggedProblems;
 }
 
 async function fetchProblemCatalogFromLeetCode() {
@@ -305,6 +309,51 @@ function mergeProblems({ liveProblems, manualProblems }) {
   }
 
   return Array.from(mergedBySlug.values()).sort(compareProblemsById);
+}
+
+function applyCuratedListTags(problems) {
+  const curatedTagNames = new Set(Object.keys(curatedProblemSets));
+  const idToTags = new Map();
+
+  for (const [tag, problemIds] of Object.entries(curatedProblemSets)) {
+    for (const problemId of problemIds) {
+      const normalizedProblemId = String(problemId || "").trim();
+      if (!normalizedProblemId) {
+        continue;
+      }
+
+      if (!idToTags.has(normalizedProblemId)) {
+        idToTags.set(normalizedProblemId, new Set());
+      }
+      idToTags.get(normalizedProblemId).add(tag);
+    }
+  }
+
+  return problems.map((problem) => {
+    const curatedTags = Array.from(idToTags.get(problem.id) || []);
+    const baseListTags = (problem.listTags || []).filter(
+      (tag) => !curatedTagNames.has(tag)
+    );
+
+    return {
+      ...problem,
+      listTags: uniqueTags([
+        ...baseListTags,
+        ...curatedTags,
+      ]),
+    };
+  });
+}
+
+function logCuratedCoverage(problems) {
+  const counts = Object.keys(curatedProblemSets)
+    .sort()
+    .map((tag) => {
+      const count = problems.filter((problem) => problem.listTags.includes(tag)).length;
+      return `${tag}: ${count}`;
+    });
+
+  console.log(`🏷️ Curated deck coverage -> ${counts.join(" | ")}`);
 }
 
 function compareProblemsById(left, right) {

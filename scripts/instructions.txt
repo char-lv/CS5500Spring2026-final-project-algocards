@@ -5,6 +5,7 @@ node seedProblems.js --force                  # override everything
 node seedProblems.js --dry-run                # preview generated catalog without writing
 node seedProblems.js --limit 100 --dry-run    # fetch first 100 LeetCode problems for testing
 node seedProblems.js --page-size 100          # customize LeetCode pagination size
+                                            # curated deck slugs live in curatedProblemSets.js
 
 # 🗑️ delete a problem
 node seedProblems.js delete --slug two-sum
