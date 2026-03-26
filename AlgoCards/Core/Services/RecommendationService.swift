@@ -33,8 +33,8 @@ struct ProblemCatalogItem {
     let problem: ProblemListItem
     let listTags: [String]
 
-    var categoryTags: [APIConfigs.Category] {
-        listTags.compactMap(APIConfigs.Category.init(rawValue:))
+    var categoryTags: [ProblemDeckConfig.Category] {
+        listTags.compactMap(ProblemDeckConfig.Category.init(rawValue:))
     }
 }
 
@@ -651,21 +651,7 @@ final class RecommendationService {
     }
 
     private func displayName(for tag: String) -> String {
-        if let category = APIConfigs.Category(rawValue: tag) {
-            return category.displayName
-        }
-
-        switch tag {
-        case "blind75":
-            return "Blind 75"
-        case "hot100":
-            return "Hot 100"
-        default:
-            return tag
-                .split(separator: "-")
-                .map { $0.capitalized }
-                .joined(separator: " ")
-        }
+        ProblemDeckConfig.displayName(forListTag: tag)
     }
 
     private func difficultyDistance(_ lhs: Difficulty, _ rhs: Difficulty) -> Int {

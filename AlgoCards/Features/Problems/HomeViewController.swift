@@ -10,12 +10,21 @@ import UIKit
 
 class HomeViewController: UIViewController {
 
-    private let categoryLists = APIConfigs.Category.allCases
-    private let curatedLists: [(title: String, tag: String, icon: String, color: UIColor)] = [
-        ("Blind 75",  "blind75", "🎯", .systemPurple),
-        ("Hot 100",   "hot100",  "🔥", .systemRed),
+    private struct DeckCardItem {
+        let title: String
+        let tag: String
+        let icon: String
+        let color: UIColor
+    }
+
+    private let defaultCuratedDecks: [DeckCardItem] = [
+        DeckCardItem(title: "Blind 75", tag: "blind75", icon: "🎯", color: .systemPurple),
+        DeckCardItem(title: "Hot 100", tag: "hot100", icon: "🔥", color: .systemRed)
     ]
     private let recommendationService = RecommendationService.shared
+
+    private lazy var curatedDecks: [DeckCardItem] = defaultCuratedDecks
+    private lazy var categoryDecks: [DeckCardItem] = makeFallbackCategoryDecks()
 
     private var currentRecommendation: PersonalizedRecommendation?
     private var isRecommendationLoading = false
@@ -23,6 +32,20 @@ class HomeViewController: UIViewController {
 
     private var isDailyLoading = false
     private weak var dailyCardButton: UIButton?
+
+    private let curatedGridContainer: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 12
+        return stack
+    }()
+
+    private let categoryGridContainer: UIStackView = {
+        let stack = UIStackView()
+        stack.axis = .vertical
+        stack.spacing = 12
+        return stack
+    }()
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -167,6 +190,7 @@ class HomeViewController: UIViewController {
             action: #selector(refreshRecommendationTapped),
             for: .touchUpInside
         )
+        loadAvailableDecks()
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -221,12 +245,12 @@ class HomeViewController: UIViewController {
 
         // Curated Lists
         buildSection(title: "📚 Curated Lists") {
-            self.buildCuratedGrid()
+            self.buildCuratedSectionContent()
         }
 
         // Category
         buildSection(title: "🗂 By Category") {
-            self.buildCategoryGrid()
+            self.buildCategorySectionContent()
         }
         // AI Recommendation
         buildSection(title: "✨ AI Recommendation") { self.buildRecommendationCard() }
@@ -301,26 +325,39 @@ class HomeViewController: UIViewController {
         return recommendationCard
     }
 
-    private func buildCuratedGrid() -> UIView {
+    private func buildCuratedSectionContent() -> UIView {
+        renderCuratedGrid()
+        return curatedGridContainer
+    }
+
+    private func renderCuratedGrid() {
+        clearArrangedSubviews(in: curatedGridContainer)
+
         let stack = UIStackView()
         stack.axis = .horizontal
         stack.spacing = 12
         stack.distribution = .fillEqually
 
-        curatedLists.forEach { item in
-            let card = makeCuratedCard(item)
+        curatedDecks.enumerated().forEach { index, item in
+            let card = makeCuratedCard(item, index: index)
             stack.addArrangedSubview(card)
         }
-        return stack
+
+        if curatedDecks.count == 1 {
+            stack.addArrangedSubview(UIView())
+        }
+
+        curatedGridContainer.addArrangedSubview(stack)
     }
 
     private func makeCuratedCard(
-        _ item: (title: String, tag: String, icon: String, color: UIColor)
+        _ item: DeckCardItem,
+        index: Int
     ) -> UIView {
         let card = UIButton(type: .system)
         card.backgroundColor = item.color.withAlphaComponent(0.12)
         card.layer.cornerRadius = 16
-        card.tag = curatedLists.firstIndex(where: { $0.tag == item.tag }) ?? 0
+        card.tag = index
         card.addTarget(self, action: #selector(curatedTapped(_:)), for: .touchUpInside)
 
         let stack = UIStackView()
@@ -338,6 +375,8 @@ class HomeViewController: UIViewController {
         titleLabel.text = item.title
         titleLabel.font = UIFont.boldSystemFont(ofSize: 16)
         titleLabel.textColor = item.color
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 2
 
         stack.addArrangedSubview(iconLabel)
         stack.addArrangedSubview(titleLabel)
@@ -351,27 +390,41 @@ class HomeViewController: UIViewController {
         return card
     }
 
-    private func buildCategoryGrid() -> UIView {
+    private func buildCategorySectionContent() -> UIView {
+        renderCategoryGrid()
+        return categoryGridContainer
+    }
+
+    private func renderCategoryGrid() {
+        clearArrangedSubviews(in: categoryGridContainer)
+
         let outerStack = UIStackView()
         outerStack.axis = .vertical
         outerStack.spacing = 12
 
-        categoryLists.chunked(into: 2).forEach { row in
+        categoryDecks.chunked(into: 2).enumerated().forEach { rowIndex, row in
             let rowStack = UIStackView()
             rowStack.axis = .horizontal
             rowStack.spacing = 12
             rowStack.distribution = .fillEqually
 
-            row.forEach { category in
-                let card = makeCategoryCard(category)
+            row.enumerated().forEach { offset, item in
+                let absoluteIndex = (rowIndex * 2) + offset
+                let card = makeCategoryCard(item, index: absoluteIndex)
                 rowStack.addArrangedSubview(card)
             }
+
+            if row.count == 1 {
+                rowStack.addArrangedSubview(UIView())
+            }
+
             outerStack.addArrangedSubview(rowStack)
         }
-        return outerStack
+
+        categoryGridContainer.addArrangedSubview(outerStack)
     }
 
-    private func makeCategoryCard(_ category: APIConfigs.Category) -> UIView {
+    private func makeCategoryCard(_ item: DeckCardItem, index: Int) -> UIView {
         let card = UIButton(type: .system)
         card.backgroundColor = .systemBackground
         card.layer.cornerRadius = 16
@@ -379,7 +432,7 @@ class HomeViewController: UIViewController {
         card.layer.shadowOpacity = 0.06
         card.layer.shadowOffset = CGSize(width: 0, height: 2)
         card.layer.shadowRadius = 8
-        card.tag = APIConfigs.Category.allCases.firstIndex(of: category) ?? 0
+        card.tag = index
         card.addTarget(self, action: #selector(categoryTapped(_:)), for: .touchUpInside)
 
         let stack = UIStackView()
@@ -390,13 +443,15 @@ class HomeViewController: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         let iconLabel = UILabel()
-        iconLabel.text = category.icon
+        iconLabel.text = item.icon
         iconLabel.font = UIFont.systemFont(ofSize: 28)
 
         let titleLabel = UILabel()
-        titleLabel.text = category.displayName
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 14)
+        titleLabel.text = item.title
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 13)
         titleLabel.textColor = .label
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 2
 
         stack.addArrangedSubview(iconLabel)
         stack.addArrangedSubview(titleLabel)
@@ -496,15 +551,146 @@ class HomeViewController: UIViewController {
     }
 
     @objc private func curatedTapped(_ sender: UIButton) {
-        let item = curatedLists[sender.tag]
+        guard curatedDecks.indices.contains(sender.tag) else { return }
+        let item = curatedDecks[sender.tag]
         let vc = ProblemsViewController(listTag: item.tag, title: item.title)
         navigationController?.pushViewController(vc, animated: true)
     }
 
     @objc private func categoryTapped(_ sender: UIButton) {
-        let category = APIConfigs.Category.allCases[sender.tag]
-        let vc = ProblemsViewController(listTag: category.rawValue, title: category.displayName)
+        guard categoryDecks.indices.contains(sender.tag) else { return }
+        let item = categoryDecks[sender.tag]
+        let vc = ProblemsViewController(listTag: item.tag, title: item.title)
         navigationController?.pushViewController(vc, animated: true)
+    }
+
+    private func loadAvailableDecks() {
+        FirestoreService.shared.fetchAvailableListTags { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
+
+                switch result {
+                case .success(let stats):
+                    let refreshedCuratedDecks = self.makeCuratedDecks(from: stats)
+                    let refreshedCategoryDecks = self.makeAutoCategoryDecks(from: stats)
+
+                    self.curatedDecks = refreshedCuratedDecks.isEmpty
+                        ? self.defaultCuratedDecks
+                        : refreshedCuratedDecks
+                    self.categoryDecks = refreshedCategoryDecks.isEmpty
+                        ? self.makeFallbackCategoryDecks()
+                        : refreshedCategoryDecks
+
+                    self.renderCuratedGrid()
+                    self.renderCategoryGrid()
+                case .failure(let error):
+                    print("[HomeViewController] Failed to load available list tags: \(error.localizedDescription)")
+                }
+            }
+        }
+    }
+
+    private func makeCuratedDecks(from stats: [ProblemListTagStat]) -> [DeckCardItem] {
+        let countsByTag = Dictionary(uniqueKeysWithValues: stats.map { ($0.tag, $0.count) })
+
+        return ProblemDeckConfig.curatedHomeTags.compactMap { tag in
+            guard countsByTag[tag, default: 0] > 0 else { return nil }
+            return makeDeckCardItem(for: tag)
+        }
+    }
+
+    private func makeAutoCategoryDecks(from stats: [ProblemListTagStat]) -> [DeckCardItem] {
+        let excludedTags = Set(ProblemDeckConfig.curatedHomeTags)
+        let eligibleStats = stats.filter { !excludedTags.contains($0.tag) && $0.count > 0 }
+        let countsByTag = Dictionary(uniqueKeysWithValues: eligibleStats.map { ($0.tag, $0.count) })
+
+        var orderedTags: [String] = []
+        var seenTags = Set<String>()
+
+        for tag in ProblemDeckConfig.featuredHomeCategoryTags where countsByTag[tag, default: 0] > 0 {
+            if seenTags.insert(tag).inserted {
+                orderedTags.append(tag)
+            }
+        }
+
+        let trendingTags = eligibleStats
+            .sorted { lhs, rhs in
+                if lhs.count == rhs.count {
+                    return ProblemDeckConfig.displayName(forListTag: lhs.tag) < ProblemDeckConfig.displayName(forListTag: rhs.tag)
+                }
+                return lhs.count > rhs.count
+            }
+            .map(\.tag)
+
+        for tag in trendingTags where seenTags.insert(tag).inserted {
+            orderedTags.append(tag)
+        }
+
+        return Array(orderedTags.prefix(12)).map(makeDeckCardItem(for:))
+    }
+
+    private func makeFallbackCategoryDecks() -> [DeckCardItem] {
+        ProblemDeckConfig.Category.allCases.map { makeDeckCardItem(for: $0.rawValue) }
+    }
+
+    private func makeDeckCardItem(for tag: String) -> DeckCardItem {
+        DeckCardItem(
+            title: ProblemDeckConfig.displayName(forListTag: tag),
+            tag: tag,
+            icon: icon(for: tag),
+            color: color(for: tag)
+        )
+    }
+
+    private func icon(for tag: String) -> String {
+        switch tag {
+        case "blind75": return "🎯"
+        case "hot100": return "🔥"
+        case "array": return "🔢"
+        case "string": return "🔤"
+        case "sliding-window": return "🪟"
+        case "two-pointers": return "2️⃣"
+        case "tree": return "🌲"
+        case "graph": return "🕸️"
+        case "stack": return "📚"
+        case "queue": return "🚶"
+        case "linked-list": return "🔗"
+        case "dynamic-programming": return "🧠"
+        case "binary-search": return "🧭"
+        case "hash-table": return "#️⃣"
+        case "heap-priority-queue": return "⛰️"
+        case "backtracking": return "🧩"
+        default: return "🏷️"
+        }
+    }
+
+    private func color(for tag: String) -> UIColor {
+        switch tag {
+        case "blind75": return .systemPurple
+        case "hot100": return .systemRed
+        case "array": return .systemBlue
+        case "string": return .systemIndigo
+        case "sliding-window": return .systemTeal
+        case "two-pointers": return .systemMint
+        case "tree": return .systemGreen
+        case "graph": return .systemCyan
+        case "stack": return .systemOrange
+        case "queue": return .systemBrown
+        case "linked-list": return .systemPink
+        case "dynamic-programming": return .systemPurple
+        case "binary-search": return .systemBlue
+        case "hash-table": return .systemYellow
+        case "heap-priority-queue": return .systemOrange
+        case "backtracking": return .systemIndigo
+        default: return .systemGray
+        }
+    }
+
+    private func clearArrangedSubviews(in stackView: UIStackView) {
+        stackView.arrangedSubviews.forEach { subview in
+            stackView.removeArrangedSubview(subview)
+            subview.removeFromSuperview()
+        }
     }
 
     private func loadRecommendation(force: Bool = false) {

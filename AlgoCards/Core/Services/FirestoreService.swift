@@ -10,6 +10,11 @@
 import Foundation
 import FirebaseFirestore
 
+struct ProblemListTagStat {
+    let tag: String
+    let count: Int
+}
+
 class FirestoreService {
     
     static let shared = FirestoreService()
@@ -63,6 +68,38 @@ class FirestoreService {
                 (Int($0.problem.id) ?? 0) < (Int($1.problem.id) ?? 0)
             }
             completion(.success(sorted))
+        }
+    }
+
+    func fetchAvailableListTags(
+        completion: @escaping (Result<[ProblemListTagStat], Error>) -> Void
+    ) {
+        problemsRef.getDocuments { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            var counts: [String: Int] = [:]
+
+            snapshot?.documents.forEach { document in
+                let tags = document.data()["listTags"] as? [String] ?? []
+                tags.forEach { tag in
+                    let normalizedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+                    guard !normalizedTag.isEmpty else { return }
+                    counts[normalizedTag, default: 0] += 1
+                }
+            }
+
+            let stats = counts.map { ProblemListTagStat(tag: $0.key, count: $0.value) }
+                .sorted { lhs, rhs in
+                    if lhs.count == rhs.count {
+                        return lhs.tag < rhs.tag
+                    }
+                    return lhs.count > rhs.count
+                }
+
+            completion(.success(stats))
         }
     }
     
