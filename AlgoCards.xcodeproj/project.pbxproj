@@ -20,7 +20,6 @@
 		CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2EE2F51837A0065C963 /* Answer.swift */; };
 		CBF3B2F12F5183820065C963 /* Comment.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF3B2F02F5183820065C963 /* Comment.swift */; };
 		CBF45C1B2F58D584007739CB /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CBF45C1A2F58D584007739CB /* GoogleService-Info.plist */; };
-		CBF45C1D2F58D612007739CB /* APIConfigs.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C1C2F58D612007739CB /* APIConfigs.swift */; };
 		CBF45C1F2F58D696007739CB /* NetworkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C1E2F58D696007739CB /* NetworkManager.swift */; };
 		CBF45C212F58DDE5007739CB /* ProblemCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C202F58DDE5007739CB /* ProblemCell.swift */; };
 		CBF45C232F58DE49007739CB /* ProblemsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C222F58DE49007739CB /* ProblemsViewModel.swift */; };
@@ -30,6 +29,9 @@
 		CBF45C2B2F5A411C007739CB /* HomeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2A2F5A411C007739CB /* HomeViewController.swift */; };
 		CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */; };
 		CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */; };
+		D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100023A25000000000001 /* ProblemDeckConfig.swift */; };
+		D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100043A25000000000001 /* LeetCodeConfig.swift */; };
+		D2A100053A25000000000001 /* LegacyMirrorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100063A25000000000001 /* LegacyMirrorConfig.swift */; };
 		D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A1C0023A24A10000000001 /* RecommendationService.swift */; };
 		CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */; };
 /* End PBXBuildFile section */
@@ -54,7 +56,6 @@
 		CBF3B2EE2F51837A0065C963 /* Answer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Answer.swift; sourceTree = "<group>"; };
 		CBF3B2F02F5183820065C963 /* Comment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Comment.swift; sourceTree = "<group>"; };
 		CBF45C1A2F58D584007739CB /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
-		CBF45C1C2F58D612007739CB /* APIConfigs.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = APIConfigs.swift; sourceTree = "<group>"; };
 		CBF45C1E2F58D696007739CB /* NetworkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkManager.swift; sourceTree = "<group>"; };
 		CBF45C202F58DDE5007739CB /* ProblemCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemCell.swift; sourceTree = "<group>"; };
 		CBF45C222F58DE49007739CB /* ProblemsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemsViewModel.swift; sourceTree = "<group>"; };
@@ -64,6 +65,9 @@
 		CBF45C2A2F5A411C007739CB /* HomeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeViewController.swift; sourceTree = "<group>"; };
 		CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardViewController.swift; sourceTree = "<group>"; };
 		CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerViewController.swift; sourceTree = "<group>"; };
+		D2A100023A25000000000001 /* ProblemDeckConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemDeckConfig.swift; sourceTree = "<group>"; };
+		D2A100043A25000000000001 /* LeetCodeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeetCodeConfig.swift; sourceTree = "<group>"; };
+		D2A100063A25000000000001 /* LegacyMirrorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMirrorConfig.swift; sourceTree = "<group>"; };
 		D1A1C0023A24A10000000001 /* RecommendationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationService.swift; sourceTree = "<group>"; };
 		CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewController.swift; sourceTree = "<group>"; };
 		E9E01750B4111811F5F646F3 /* Pods-AlgoCards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.release.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"; sourceTree = "<group>"; };
@@ -217,7 +221,9 @@
 		CBF3B2D72F516FE90065C963 /* Constants */ = {
 			isa = PBXGroup;
 			children = (
-				CBF45C1C2F58D612007739CB /* APIConfigs.swift */,
+				D2A100023A25000000000001 /* ProblemDeckConfig.swift */,
+				D2A100043A25000000000001 /* LeetCodeConfig.swift */,
+				D2A100063A25000000000001 /* LegacyMirrorConfig.swift */,
 			);
 			path = Constants;
 			sourceTree = "<group>";
@@ -386,7 +392,9 @@
 				CBF45C252F58E122007739CB /* AuthService.swift in Sources */,
 				CBF45C2B2F5A411C007739CB /* HomeViewController.swift in Sources */,
 				CBF3B2EB2F5183600065C963 /* Problem.swift in Sources */,
+				D2A100053A25000000000001 /* LegacyMirrorConfig.swift in Sources */,
 				CBF45C292F58E2BA007739CB /* ProblemsViewController.swift in Sources */,
+				D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */,
 				D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */,
 				CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */,
 				CBF3B2F12F5183820065C963 /* Comment.swift in Sources */,
@@ -394,7 +402,7 @@
 				CBF45C212F58DDE5007739CB /* ProblemCell.swift in Sources */,
 				CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */,
 				CBF3B2ED2F51836E0065C963 /* User.swift in Sources */,
-				CBF45C1D2F58D612007739CB /* APIConfigs.swift in Sources */,
+				D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */,
 				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
 				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,

@@ -76,7 +76,7 @@ class NetworkManager {
     func fetchDailyProblem(
         completion: @escaping (Result<Problem, NetworkError>) -> Void
     ) {
-        guard let url = APIConfigs.dailyProblemURL else {
+        guard let url = LegacyMirrorConfig.dailyProblemURL else {
             completion(.failure(.invalidURL))
             return
         }
@@ -105,7 +105,7 @@ class NetworkManager {
         titleSlug: String,
         completion: @escaping (Result<String, NetworkError>) -> Void
     ) {
-        guard let url = APIConfigs.officialSolutionURL(titleSlug: titleSlug) else {
+        guard let url = LegacyMirrorConfig.officialSolutionURL(titleSlug: titleSlug) else {
             completion(.failure(.invalidURL))
             return
         }
@@ -129,7 +129,7 @@ class NetworkManager {
         titleSlug: String,
         completion: @escaping (Result<Problem, NetworkError>) -> Void
     ) {
-        guard let url = URL(string: "https://leetcode.com/graphql") else {
+        guard let url = LeetCodeConfig.graphqlURL else {
             completion(.failure(.invalidURL))
             return
         }
@@ -217,7 +217,7 @@ class NetworkManager {
         titleSlug: String,
         completion: @escaping (Result<Problem, NetworkError>) -> Void
     ) {
-        guard let url = APIConfigs.problemDetailURL(titleSlug: titleSlug) else {
+        guard let url = LegacyMirrorConfig.problemDetailURL(titleSlug: titleSlug) else {
             completion(.failure(.invalidURL))
             return
         }
