@@ -99,6 +99,8 @@ class AuthViewController: UIViewController {
 
     // MARK: - Lifecycle
 
+    /// Called when the view controller's view is loaded into memory.
+    /// Sets up the initial view configuration, UI elements, and event handlers.
     override func viewDidLoad() {
         super.viewDidLoad()
         view.backgroundColor = .systemBackground
@@ -112,6 +114,8 @@ class AuthViewController: UIViewController {
 
     // MARK: - Layout
 
+    /// Sets up the user interface by creating and positioning all UI elements.
+    /// Configures stack views, adds subviews, and activates layout constraints.
     private func setupUI() {
         let fieldStack = UIStackView(arrangedSubviews: [emailField, passwordField, usernameField])
         fieldStack.axis = .vertical
@@ -164,6 +168,8 @@ class AuthViewController: UIViewController {
 
     // MARK: - Actions
 
+    /// Handles the login button tap event.
+    /// Validates email and password fields, then attempts to sign in the user.
     @objc private func loginTapped() {
         guard
             let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty,
@@ -185,6 +191,8 @@ class AuthViewController: UIViewController {
         }
     }
 
+    /// Handles the sign up button tap event.
+    /// Validates email, password, and username fields, then attempts to create a new user account.
     @objc private func signUpTapped() {
         guard
             let email = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines), !email.isEmpty,
@@ -213,6 +221,8 @@ class AuthViewController: UIViewController {
         }
     }
 
+    /// Handles the forgot password button tap event.
+    /// Shows an alert to collect the user's email and sends a password reset link.
     @objc private func forgotPasswordTapped() {
         let alert = UIAlertController(
             title: "Reset Password",
@@ -251,23 +261,29 @@ class AuthViewController: UIViewController {
         present(alert, animated: true)
     }
 
+    /// Dismisses the keyboard when the user taps outside of text fields.
     @objc private func dismissKeyboard() {
         view.endEditing(true)
     }
 
     // MARK: - Helpers
 
+    /// Shows or hides the loading indicator and disables/enables buttons during authentication.
+    /// - Parameter loading: True to show loading state, false to hide it.
     private func setLoading(_ loading: Bool) {
         loading ? activityIndicator.startAnimating() : activityIndicator.stopAnimating()
         loginButton.isEnabled = !loading
         signUpButton.isEnabled = !loading
     }
 
+    /// Navigates to the main application interface after successful authentication.
     private func routeToMainApp() {
         guard let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate else { return }
         sceneDelegate.showMainApp()
     }
 
+    /// Displays an error alert with the given message to inform the user of authentication issues.
+    /// - Parameter message: The error message to display.
     private func showAuthError(_ message: String) {
         let alert = UIAlertController(title: "Error", message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
