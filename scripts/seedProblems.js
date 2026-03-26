@@ -8,12 +8,48 @@ admin.initializeApp({
 const db = admin.firestore();
 
 const args = process.argv.slice(2);
-const listFilter = args.includes("--list")
-  ? args[args.indexOf("--list") + 1]
-  : null;
+const command = args[0]; // seed | delete | list | stats
+const listFilter = getFlagValue("--list");
 const forceOverwrite = args.includes("--force");
+const dryRun = args.includes("--dry-run");
 
-const problems = [
+const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
+const LEETCODE_PAGE_SIZE = getPositiveIntFlag("--page-size") || 200;
+const LEETCODE_FETCH_LIMIT = getPositiveIntFlag("--limit");
+const WRITE_BATCH_SIZE = 450;
+const QUESTION_LIST_QUERY = `
+  query problemsetQuestionList(
+    $categorySlug: String
+    $skip: Int
+    $limit: Int
+    $filters: QuestionListFilterInput
+  ) {
+    problemsetQuestionList: questionList(
+      categorySlug: $categorySlug
+      skip: $skip
+      limit: $limit
+      filters: $filters
+    ) {
+      total: totalNum
+      questions: data {
+        questionFrontendId
+        title
+        titleSlug
+        difficulty
+        acRate
+        isPaidOnly
+        hasSolution
+        hasVideoSolution
+        topicTags {
+          name
+          slug
+        }
+      }
+    }
+  }
+`;
+
+const manualProblems = [
   // ── Array ──────────────────────────────────────────────────
   { id: "1",   title: "Two Sum",                                titleSlug: "two-sum",                                       difficulty: "Easy",   acRate: 53.5, isPaidOnly: false, hasSolution: true,  listTags: ["array", "blind75", "hot100"] },
   { id: "4",   title: "Median of Two Sorted Arrays",            titleSlug: "median-of-two-sorted-arrays",                   difficulty: "Hard",   acRate: 40.9, isPaidOnly: false, hasSolution: true,  listTags: ["array", "hot100"] },
@@ -81,8 +117,6 @@ const problems = [
   { id: "232", title: "Implement Queue using Stacks",           titleSlug: "implement-queue-using-stacks",                  difficulty: "Easy",   acRate: 65.3, isPaidOnly: false, hasSolution: true,  listTags: ["queue"] },
 ];
 
-const command = args[0]; // seed | delete | list | stats
-
 async function main() {
   switch (command) {
     case "delete":  await deleteProblem(); break;
@@ -94,31 +128,229 @@ async function main() {
 }
 
 async function seed() {
+  const problems = await buildProblemCatalog();
   const toSeed = listFilter
     ? problems.filter((p) => p.listTags.includes(listFilter))
     : problems;
 
   console.log(`🚀 Seeding ${toSeed.length} problems${listFilter ? ` for [${listFilter}]` : ""}...\n`);
 
-  const batch = db.batch();
-  for (const p of toSeed) {
-    const ref = db.collection("problems").doc(p.titleSlug);
-    batch.set(ref, {
-      questionFrontendId: p.id,
-      title: p.title,
-      titleSlug: p.titleSlug,
-      difficulty: p.difficulty,
-      acRate: p.acRate,
-      isPaidOnly: p.isPaidOnly,
-      hasSolution: p.hasSolution,
-      listTags: p.listTags,
-      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
-    }, { merge: !forceOverwrite });
+  if (dryRun) {
+    console.log("🧪 Dry run enabled. No Firestore writes were performed.");
+    console.log("Preview:");
+    toSeed.slice(0, 10).forEach((problem) => {
+      console.log(
+        `  #${problem.id.padEnd(4)} ${problem.difficulty.padEnd(7)} ${problem.title} [${problem.listTags.join(", ")}]`
+      );
+    });
+    process.exit(0);
   }
 
-  await batch.commit();
+  for (const batchItems of chunkArray(toSeed, WRITE_BATCH_SIZE)) {
+    const batch = db.batch();
+    for (const p of batchItems) {
+      const ref = db.collection("problems").doc(p.titleSlug);
+      batch.set(ref, {
+        questionFrontendId: p.id,
+        title: p.title,
+        titleSlug: p.titleSlug,
+        difficulty: p.difficulty,
+        acRate: p.acRate,
+        isPaidOnly: p.isPaidOnly,
+        hasSolution: p.hasSolution,
+        listTags: p.listTags,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+      }, { merge: !forceOverwrite });
+    }
+
+    await batch.commit();
+    console.log(`✅ Wrote batch of ${batchItems.length} problems.`);
+  }
+
   console.log(`✅ Seeded ${toSeed.length} problems.`);
   await showStats();
+}
+
+async function buildProblemCatalog() {
+  console.log("🌐 Fetching problem catalog from LeetCode...");
+  const fetchedProblems = await fetchProblemCatalogFromLeetCode();
+  const mergedProblems = mergeProblems({
+    liveProblems: fetchedProblems,
+    manualProblems,
+  });
+
+  console.log(
+    `🧩 Catalog ready: ${mergedProblems.length} total problems ` +
+    `(${fetchedProblems.length} live + ${manualProblems.length} manual curated entries).`
+  );
+
+  return mergedProblems;
+}
+
+async function fetchProblemCatalogFromLeetCode() {
+  const problems = [];
+  let total = null;
+  let skip = 0;
+
+  while (total === null || skip < total) {
+    if (LEETCODE_FETCH_LIMIT && problems.length >= LEETCODE_FETCH_LIMIT) {
+      break;
+    }
+
+    const currentLimit = LEETCODE_FETCH_LIMIT
+      ? Math.min(LEETCODE_PAGE_SIZE, LEETCODE_FETCH_LIMIT - problems.length)
+      : LEETCODE_PAGE_SIZE;
+
+    const response = await fetch(LEETCODE_GRAPHQL_URL, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        operationName: "problemsetQuestionList",
+        variables: {
+          categorySlug: "",
+          skip,
+          limit: currentLimit,
+          filters: {},
+        },
+        query: QUESTION_LIST_QUERY,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`LeetCode GraphQL request failed with HTTP ${response.status}`);
+    }
+
+    const payload = await response.json();
+    if (payload.errors?.length) {
+      throw new Error(payload.errors.map((error) => error.message).join("; "));
+    }
+
+    const result = payload?.data?.problemsetQuestionList;
+    if (!result || !Array.isArray(result.questions)) {
+      throw new Error("Invalid LeetCode GraphQL response.");
+    }
+
+    total = result.total;
+    const normalizedProblems = result.questions
+      .map(normalizeLeetCodeProblem)
+      .filter(Boolean);
+
+    problems.push(...normalizedProblems);
+    skip += result.questions.length;
+
+    console.log(`  • fetched ${problems.length}/${LEETCODE_FETCH_LIMIT || total}`);
+
+    if (result.questions.length === 0) {
+      break;
+    }
+  }
+
+  return problems;
+}
+
+function normalizeLeetCodeProblem(problem) {
+  if (!problem?.questionFrontendId || !problem?.titleSlug || !problem?.title) {
+    return null;
+  }
+
+  return {
+    id: String(problem.questionFrontendId),
+    title: problem.title,
+    titleSlug: problem.titleSlug,
+    difficulty: problem.difficulty || "Medium",
+    acRate: normalizeAcRate(problem.acRate),
+    isPaidOnly: Boolean(problem.isPaidOnly),
+    hasSolution: Boolean(problem.hasSolution || problem.hasVideoSolution),
+    listTags: uniqueTags((problem.topicTags || []).map((tag) => normalizeTag(tag.slug))),
+  };
+}
+
+function mergeProblems({ liveProblems, manualProblems }) {
+  const mergedBySlug = new Map();
+
+  for (const problem of liveProblems) {
+    mergedBySlug.set(problem.titleSlug, {
+      ...problem,
+      listTags: uniqueTags(problem.listTags),
+    });
+  }
+
+  for (const manualProblem of manualProblems) {
+    const existingProblem = mergedBySlug.get(manualProblem.titleSlug);
+    if (!existingProblem) {
+      mergedBySlug.set(manualProblem.titleSlug, {
+        ...manualProblem,
+        acRate: normalizeAcRate(manualProblem.acRate),
+        listTags: uniqueTags(manualProblem.listTags),
+      });
+      continue;
+    }
+
+    mergedBySlug.set(manualProblem.titleSlug, {
+      ...existingProblem,
+      id: existingProblem.id || manualProblem.id,
+      title: existingProblem.title || manualProblem.title,
+      titleSlug: existingProblem.titleSlug || manualProblem.titleSlug,
+      difficulty: existingProblem.difficulty || manualProblem.difficulty,
+      acRate: normalizeAcRate(existingProblem.acRate ?? manualProblem.acRate),
+      isPaidOnly: existingProblem.isPaidOnly ?? manualProblem.isPaidOnly,
+      hasSolution: existingProblem.hasSolution ?? manualProblem.hasSolution,
+      listTags: uniqueTags([
+        ...(manualProblem.listTags || []),
+        ...(existingProblem.listTags || []),
+      ]),
+    });
+  }
+
+  return Array.from(mergedBySlug.values()).sort(compareProblemsById);
+}
+
+function compareProblemsById(left, right) {
+  return (parseInt(left.id, 10) || 0) - (parseInt(right.id, 10) || 0);
+}
+
+function normalizeAcRate(value) {
+  const numericValue = Number(value);
+  if (!Number.isFinite(numericValue)) {
+    return 0;
+  }
+  return Number(numericValue.toFixed(1));
+}
+
+function normalizeTag(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function uniqueTags(tags) {
+  return [...new Set((tags || []).map(normalizeTag).filter(Boolean))];
+}
+
+function chunkArray(items, size) {
+  const chunks = [];
+  for (let index = 0; index < items.length; index += size) {
+    chunks.push(items.slice(index, index + size));
+  }
+  return chunks;
+}
+
+function getFlagValue(flag) {
+  const index = args.indexOf(flag);
+  if (index === -1 || index + 1 >= args.length) {
+    return null;
+  }
+  return args[index + 1];
+}
+
+function getPositiveIntFlag(flag) {
+  const rawValue = getFlagValue(flag);
+  if (!rawValue) {
+    return null;
+  }
+
+  const numericValue = Number.parseInt(rawValue, 10);
+  return Number.isInteger(numericValue) && numericValue > 0 ? numericValue : null;
 }
 
 
@@ -154,11 +386,6 @@ async function removeFromList() {
 
 async function listProblems() {
   const list = listFilter || "array";
-  const snapshot = await db.collection("problems")
-    .whereField ? 
-    db.collection("problems").where("listTags", "array-contains", list).get() :
-    db.collection("problems").where("listTags", "array-contains", list).get();
-
   const snap = await db.collection("problems")
     .where("listTags", "array-contains", list)
     .orderBy("questionFrontendId")

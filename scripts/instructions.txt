@@ -1,7 +1,10 @@
 # ✅ add/update problems
 node seedProblems.js                          # import all the problems to db
-node seedProblems.js --list blind75           # i.e. only import probelms from list 'blind 75'
+node seedProblems.js --list blind75           # only import problems from list 'blind75'
 node seedProblems.js --force                  # override everything
+node seedProblems.js --dry-run                # preview generated catalog without writing
+node seedProblems.js --limit 100 --dry-run    # fetch first 100 LeetCode problems for testing
+node seedProblems.js --page-size 100          # customize LeetCode pagination size
 
 # 🗑️ delete a problem
 node seedProblems.js delete --slug two-sum
