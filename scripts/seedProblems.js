@@ -123,6 +123,7 @@ async function main() {
     case "delete":  await deleteProblem(); break;
     case "remove":  await removeFromList(); break;
     case "list":    await listProblems(); break;
+    case "metadata": await refreshMetadata(); break;
     case "stats":   await showStats(); break;
     default:        await seed(); break;
   }
@@ -166,6 +167,12 @@ async function seed() {
 
     await batch.commit();
     console.log(`✅ Wrote batch of ${batchItems.length} problems.`);
+  }
+
+  if (!listFilter) {
+    await writeProblemCatalogMetadata(problems);
+  } else {
+    console.log("ℹ️ Skipped metadata refresh because --list performed a partial seed.");
   }
 
   console.log(`✅ Seeded ${toSeed.length} problems.`);
@@ -450,14 +457,9 @@ async function listProblems() {
 
 async function showStats() {
   const snap = await db.collection("problems").get();
-  const counts = {};
-
-  snap.forEach((doc) => {
-    const tags = doc.data().listTags || [];
-    tags.forEach((tag) => {
-      counts[tag] = (counts[tag] || 0) + 1;
-    });
-  });
+  const counts = buildListTagCounts(
+    snap.docs.map((doc) => doc.data())
+  );
 
   console.log(`\n📊 Firestore stats (${snap.size} total problems):`);
   Object.entries(counts)
@@ -467,6 +469,36 @@ async function showStats() {
       console.log(`   ${tag.padEnd(16)} ${String(count).padStart(3)}  ${bar}`);
     });
   process.exit(0);
+}
+
+async function writeProblemCatalogMetadata(problems) {
+  const counts = buildListTagCounts(problems);
+  await db.collection("metadata").doc("problemCatalog").set({
+    problemCount: problems.length,
+    listTagStats: counts,
+    updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+  }, { merge: true });
+  console.log("✅ Updated metadata/problemCatalog listTagStats.");
+}
+
+async function refreshMetadata() {
+  const problems = await buildProblemCatalog();
+  await writeProblemCatalogMetadata(problems);
+  console.log(`✅ Refreshed metadata using ${problems.length} catalog entries.`);
+  process.exit(0);
+}
+
+function buildListTagCounts(problems) {
+  const counts = {};
+
+  for (const problem of problems) {
+    const tags = problem.listTags || [];
+    for (const tag of tags) {
+      counts[tag] = (counts[tag] || 0) + 1;
+    }
+  }
+
+  return counts;
 }
 
 main().catch((err) => {

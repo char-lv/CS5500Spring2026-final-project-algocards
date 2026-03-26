@@ -27,6 +27,7 @@ class FirestoreService {
     private var problemsRef: CollectionReference { db.collection("problems") }
     private var submissionsRef: CollectionReference { db.collection("submissions") }
     private var commentsRef: CollectionReference { db.collection("comments") }
+    private var metadataRef: CollectionReference { db.collection("metadata") }
 
     // Problems
     func fetchProblems(
@@ -132,6 +133,22 @@ class FirestoreService {
     func fetchAvailableListTags(
         completion: @escaping (Result<[ProblemListTagStat], Error>) -> Void
     ) {
+        metadataRef.document("problemCatalog").getDocument { [weak self] snapshot, error in
+            guard let self else { return }
+
+            if let data = snapshot?.data(),
+               let counts = self.makeListTagCounts(from: data["listTagStats"]) {
+                completion(.success(self.makeSortedTagStats(from: counts)))
+                return
+            }
+
+            self.fetchAvailableListTagsByScanningProblems(completion: completion)
+        }
+    }
+
+    private func fetchAvailableListTagsByScanningProblems(
+        completion: @escaping (Result<[ProblemListTagStat], Error>) -> Void
+    ) {
         problemsRef.getDocuments { snapshot, error in
             if let error = error {
                 completion(.failure(error))
@@ -149,16 +166,38 @@ class FirestoreService {
                 }
             }
 
-            let stats = counts.map { ProblemListTagStat(tag: $0.key, count: $0.value) }
-                .sorted { lhs, rhs in
-                    if lhs.count == rhs.count {
-                        return lhs.tag < rhs.tag
-                    }
-                    return lhs.count > rhs.count
-                }
-
-            completion(.success(stats))
+            completion(.success(self.makeSortedTagStats(from: counts)))
         }
+    }
+
+    private func makeListTagCounts(from rawValue: Any?) -> [String: Int]? {
+        guard let rawCounts = rawValue as? [String: Any] else {
+            return nil
+        }
+
+        var counts: [String: Int] = [:]
+        for (tag, value) in rawCounts {
+            let normalizedTag = tag.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+            guard !normalizedTag.isEmpty else { continue }
+
+            if let count = value as? Int {
+                counts[normalizedTag] = count
+            } else if let number = value as? NSNumber {
+                counts[normalizedTag] = number.intValue
+            }
+        }
+
+        return counts.isEmpty ? nil : counts
+    }
+
+    private func makeSortedTagStats(from counts: [String: Int]) -> [ProblemListTagStat] {
+        counts.map { ProblemListTagStat(tag: $0.key, count: $0.value) }
+            .sorted { lhs, rhs in
+                if lhs.count == rhs.count {
+                    return lhs.tag < rhs.tag
+                }
+                return lhs.count > rhs.count
+            }
     }
     
     // Practice

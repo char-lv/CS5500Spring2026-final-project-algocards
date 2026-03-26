@@ -193,12 +193,11 @@ class HomeViewController: UIViewController {
             for: .touchUpInside
         )
         loadAvailableDecks()
+        loadRecommendation()
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        shownRecommendationIds.removeAll()
-        loadRecommendation(force: true)
     }
 
     @objc private func leaderboardTapped() {
@@ -743,7 +742,7 @@ class HomeViewController: UIViewController {
         recommendationBadgeLabel.text = "ANALYZING"
         recommendationHeadlineLabel.text = "Finding your next best question"
         recommendationProblemLabel.text = "We’re ranking your top candidates and looking for a related unseen follow-up."
-        recommendationMetaLabel.text = "This refreshes every time you return home."
+        recommendationMetaLabel.text = "Refresh manually when you want a new suggestion."
         recommendationReasonLabel.text = "Phase 2 uses AI to suggest a related unseen problem when available. After 10 AI recommendations in one day, the card automatically falls back to the Phase 1 personalized pick."
         recommendationActionButton.isHidden = true
         recommendationRetryButton.isHidden = true
