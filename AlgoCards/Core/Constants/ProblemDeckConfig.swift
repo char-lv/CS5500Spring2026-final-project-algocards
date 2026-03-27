@@ -8,9 +8,9 @@
 import Foundation
 
 enum DifficultyFilter: String {
-    case easy   = "EASY"
-    case medium = "MEDIUM"
-    case hard   = "HARD"
+    case easy   = "Easy"
+    case medium = "Medium"
+    case hard   = "Hard"
 }
 
 enum ProblemDeckConfig {

@@ -424,7 +424,7 @@ class FirestoreService {
             let title = data["title"] as? String,
             let titleSlug = data["titleSlug"] as? String,
             let diffStr = data["difficulty"] as? String,
-            let difficulty = Difficulty(rawValue: diffStr),
+            let difficulty = Difficulty(rawValue: diffStr) ?? Difficulty(rawValue: diffStr.capitalized),
             let acRate = data["acRate"] as? Double,
             let isPaidOnly = data["isPaidOnly"] as? Bool,
             let hasSolution = data["hasSolution"] as? Bool
