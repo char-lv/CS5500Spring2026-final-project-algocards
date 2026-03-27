@@ -176,13 +176,13 @@ class ProblemsViewController: UIViewController {
     }
 
     private func configureDeckPresentation() {
-        let accentColor = accentColor(for: listTag)
+        let accentColor = ProblemDeckConfig.color(forListTag: listTag)
 
         progressView.backgroundColor = accentColor.withAlphaComponent(0.10)
         progressView.layer.borderWidth = 1
         progressView.layer.borderColor = accentColor.withAlphaComponent(0.18).cgColor
 
-        deckIconBadge.text = icon(for: listTag)
+        deckIconBadge.text = ProblemDeckConfig.icon(forListTag: listTag)
         deckIconBadge.backgroundColor = accentColor.withAlphaComponent(0.16)
         deckTitleLabel.text = deckTitleText
         deckDescriptionLabel.text = descriptionText(for: listTag, title: deckTitleText)
@@ -226,58 +226,6 @@ class ProblemsViewController: UIViewController {
         case 2: return .medium
         case 3: return .hard
         default: return nil
-        }
-    }
-
-    private func icon(for tag: String) -> String {
-        switch tag {
-        case ProblemDeckConfig.favoritesTag: return "❤️"
-        case "blind75": return "🎯"
-        case "hot100": return "🔥"
-        case "interview150": return "💼"
-        case "array": return "🔢"
-        case "string": return "🔤"
-        case "sliding-window": return "🪟"
-        case "two-pointers": return "2️⃣"
-        case "tree": return "🌲"
-        case "graph": return "🕸️"
-        case "stack": return "📚"
-        case "queue": return "🚶"
-        case "linked-list": return "🔗"
-        case "dynamic-programming": return "🧠"
-        case "binary-search": return "🧭"
-        case "hash-table": return "#️⃣"
-        case "heap-priority-queue": return "⛰️"
-        case "backtracking": return "🧩"
-        case "math": return "➗"
-        case "recursion": return "🔁"
-        default: return "🏷️"
-        }
-    }
-
-    private func accentColor(for tag: String) -> UIColor {
-        switch tag {
-        case ProblemDeckConfig.favoritesTag: return .systemPink
-        case "blind75": return .systemPurple
-        case "hot100": return .systemRed
-        case "interview150": return .systemBlue
-        case "array": return .systemBlue
-        case "string": return .systemIndigo
-        case "sliding-window": return .systemTeal
-        case "two-pointers": return .systemMint
-        case "tree": return .systemGreen
-        case "graph": return .systemCyan
-        case "stack": return .systemOrange
-        case "queue": return .systemBrown
-        case "linked-list": return .systemPink
-        case "dynamic-programming": return .systemPurple
-        case "binary-search": return .systemBlue
-        case "hash-table": return .systemYellow
-        case "heap-priority-queue": return .systemOrange
-        case "backtracking": return .systemIndigo
-        case "math": return .systemTeal
-        case "recursion": return .systemPink
-        default: return .systemGray
         }
     }
 
@@ -360,7 +308,8 @@ extension ProblemsViewController: UITableViewDelegate {
 
         let flashCardVC = FlashCardViewController(
             problems: viewModel.filteredProblems,
-            currentIndex: indexPath.row
+            currentIndex: indexPath.row,
+            solvedProblemIds: Set(viewModel.solvedProblemIds)
         )
         navigationController?.pushViewController(flashCardVC, animated: true)
     }

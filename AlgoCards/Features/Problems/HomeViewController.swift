@@ -652,57 +652,9 @@ class HomeViewController: UIViewController {
         DeckCardItem(
             title: ProblemDeckConfig.displayName(forListTag: tag),
             tag: tag,
-            icon: icon(for: tag),
-            color: color(for: tag)
+            icon: ProblemDeckConfig.icon(forListTag: tag),
+            color: ProblemDeckConfig.color(forListTag: tag)
         )
-    }
-
-    private func icon(for tag: String) -> String {
-        switch tag {
-        case ProblemDeckConfig.favoritesTag: return "❤️"
-        case "blind75": return "🎯"
-        case "hot100": return "🔥"
-        case "interview150": return "💼"
-        case "array": return "🔢"
-        case "string": return "🔤"
-        case "sliding-window": return "🪟"
-        case "two-pointers": return "2️⃣"
-        case "tree": return "🌲"
-        case "graph": return "🕸️"
-        case "stack": return "📚"
-        case "queue": return "🚶"
-        case "linked-list": return "🔗"
-        case "dynamic-programming": return "🧠"
-        case "binary-search": return "🧭"
-        case "hash-table": return "#️⃣"
-        case "heap-priority-queue": return "⛰️"
-        case "backtracking": return "🧩"
-        default: return "🏷️"
-        }
-    }
-
-    private func color(for tag: String) -> UIColor {
-        switch tag {
-        case ProblemDeckConfig.favoritesTag: return .systemPink
-        case "blind75": return .systemPurple
-        case "hot100": return .systemRed
-        case "interview150": return .systemBlue
-        case "array": return .systemBlue
-        case "string": return .systemIndigo
-        case "sliding-window": return .systemTeal
-        case "two-pointers": return .systemMint
-        case "tree": return .systemGreen
-        case "graph": return .systemCyan
-        case "stack": return .systemOrange
-        case "queue": return .systemBrown
-        case "linked-list": return .systemPink
-        case "dynamic-programming": return .systemPurple
-        case "binary-search": return .systemBlue
-        case "hash-table": return .systemYellow
-        case "heap-priority-queue": return .systemOrange
-        case "backtracking": return .systemIndigo
-        default: return .systemGray
-        }
     }
 
     private func clearArrangedSubviews(in stackView: UIStackView) {

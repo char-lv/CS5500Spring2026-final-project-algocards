@@ -21,6 +21,8 @@ class FlashCardViewController: UIViewController {
     private var isFlipped = false
     /// Loaded once on viewDidLoad and updated in-memory on every toggle.
     private var likedProblemIds = Set<String>()
+    /// Passed in at init from the caller's already-loaded data; updated in-memory when the user marks a problem solved.
+    private var solvedProblemIds: Set<String>
 
     // MARK: - Card UI
 
@@ -213,9 +215,10 @@ class FlashCardViewController: UIViewController {
 
     // MARK: - Init
 
-    init(problems: [ProblemListItem], currentIndex: Int) {
+    init(problems: [ProblemListItem], currentIndex: Int, solvedProblemIds: Set<String> = []) {
         self.problems = problems
         self.currentIndex = currentIndex
+        self.solvedProblemIds = solvedProblemIds
         super.init(nibName: nil, bundle: nil)
     }
     required init?(coder: NSCoder) { fatalError() }
@@ -363,15 +366,23 @@ class FlashCardViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-        let image = UIImage(systemName: "checkmark.circle")
         let gotItButton = UIBarButtonItem(
-            image: image,
+            image: UIImage(systemName: "checkmark.circle"),
             style: .done,
             target: self,
             action: #selector(onSolvedTapped)
         )
         gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
         navigationItem.rightBarButtonItem = gotItButton
+        updateSolvedButton()
+    }
+
+    private func updateSolvedButton() {
+        let isSolved = solvedProblemIds.contains(problem.id)
+        navigationItem.rightBarButtonItem?.image = UIImage(
+            systemName: isSolved ? "checkmark.circle.fill" : "checkmark.circle"
+        )
+        navigationItem.rightBarButtonItem?.isEnabled = !isSolved
     }
 
     private func setupGestures() {
@@ -427,11 +438,8 @@ class FlashCardViewController: UIViewController {
         frontScrollView.setContentOffset(.zero, animated: false)
         backScrollView.setContentOffset(.zero, animated: false)
 
-        // Reset "Got It" button for the new card
-        navigationItem.rightBarButtonItem?.image = UIImage(systemName: "checkmark.circle")
-        navigationItem.rightBarButtonItem?.isEnabled = true
-
-        // Sync like button from in-memory cache — no Firestore read needed.
+        // Sync both action buttons from in-memory caches — no Firestore reads needed.
+        updateSolvedButton()
         updateLikeButton()
 
         let token = UUID()
@@ -595,13 +603,13 @@ class FlashCardViewController: UIViewController {
             showAlert(title: "Login Required", message: "Please log in to track your progress.")
             return
         }
-        FirestoreService.shared.markProblemSolved(userId: userId, problemId: problem.id) { [weak self] error in
+        let problemId = problem.id
+        FirestoreService.shared.markProblemSolved(userId: userId, problemId: problemId) { [weak self] error in
             DispatchQueue.main.async {
-                if error == nil {
-                    self?.navigationItem.rightBarButtonItem?.image = UIImage(systemName: "checkmark.circle.fill")
-                    self?.navigationItem.rightBarButtonItem?.isEnabled = false
-                    UINotificationFeedbackGenerator().notificationOccurred(.success)
-                }
+                guard let self, error == nil else { return }
+                self.solvedProblemIds.insert(problemId)
+                self.updateSolvedButton()
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
             }
         }
     }

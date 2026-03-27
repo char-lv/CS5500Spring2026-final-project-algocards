@@ -124,6 +124,9 @@ class ProblemsViewModel {
         solvedProblemIds.contains(problemId)
     }
 
-    var solvedCount: Int { solvedProblemIds.count }
+    var solvedCount: Int {
+        let solvedSet = Set(solvedProblemIds)
+        return allProblems.filter { solvedSet.contains($0.id) }.count
+    }
     var totalCount: Int { allProblems.count }
 }
