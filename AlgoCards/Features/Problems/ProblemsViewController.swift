@@ -360,7 +360,8 @@ extension ProblemsViewController: UITableViewDelegate {
 
         let flashCardVC = FlashCardViewController(
             problems: viewModel.filteredProblems,
-            currentIndex: indexPath.row
+            currentIndex: indexPath.row,
+            solvedProblemIds: Set(viewModel.solvedProblemIds)
         )
         navigationController?.pushViewController(flashCardVC, animated: true)
     }
