@@ -424,13 +424,19 @@ class FirestoreService {
             let title = data["title"] as? String,
             let titleSlug = data["titleSlug"] as? String,
             let diffStr = data["difficulty"] as? String,
-            let difficulty = Difficulty(rawValue: diffStr),
+            let difficulty = Difficulty(rawValue: diffStr) ?? Difficulty(rawValue: diffStr.capitalized),
             let acRate = data["acRate"] as? Double,
             let isPaidOnly = data["isPaidOnly"] as? Bool,
             let hasSolution = data["hasSolution"] as? Bool
         else { return nil }
 
         let listTags = data["listTags"] as? [String] ?? []
+        let rawTags = data["topicTags"] as? [[String: Any]] ?? []
+        let topicTags = rawTags.compactMap { dict -> TopicTag? in
+            guard let name = dict["name"] as? String,
+                  let slug = dict["slug"] as? String else { return nil }
+            return TopicTag(name: name, slug: slug)
+        }
         let problem = ProblemListItem(
             id: id,
             title: title,
@@ -439,7 +445,7 @@ class FirestoreService {
             acRate: acRate,
             isPaidOnly: isPaidOnly,
             hasSolution: hasSolution,
-            topicTags: []
+            topicTags: topicTags
         )
 
         return ProblemCatalogItem(problem: problem, listTags: listTags)

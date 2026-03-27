@@ -83,7 +83,7 @@ class ProblemsViewModel {
         selectedDifficulty = difficulty
         if let difficulty = difficulty {
             filteredProblems = allProblems.filter {
-                $0.difficulty.rawValue.uppercased() == difficulty.rawValue
+                $0.difficulty.rawValue == difficulty.rawValue
             }
         } else {
             filteredProblems = allProblems
@@ -107,7 +107,7 @@ class ProblemsViewModel {
     // Search
     func search(query: String) {
         let base = selectedDifficulty == nil ? allProblems : allProblems.filter {
-            $0.difficulty.rawValue.uppercased() == selectedDifficulty!.rawValue
+            $0.difficulty.rawValue == selectedDifficulty!.rawValue
         }
         if query.isEmpty {
             filteredProblems = base
