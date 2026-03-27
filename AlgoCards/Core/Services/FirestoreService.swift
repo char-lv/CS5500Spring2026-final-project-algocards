@@ -431,6 +431,12 @@ class FirestoreService {
         else { return nil }
 
         let listTags = data["listTags"] as? [String] ?? []
+        let rawTags = data["topicTags"] as? [[String: Any]] ?? []
+        let topicTags = rawTags.compactMap { dict -> TopicTag? in
+            guard let name = dict["name"] as? String,
+                  let slug = dict["slug"] as? String else { return nil }
+            return TopicTag(name: name, slug: slug)
+        }
         let problem = ProblemListItem(
             id: id,
             title: title,
@@ -439,7 +445,7 @@ class FirestoreService {
             acRate: acRate,
             isPaidOnly: isPaidOnly,
             hasSolution: hasSolution,
-            topicTags: []
+            topicTags: topicTags
         )
 
         return ProblemCatalogItem(problem: problem, listTags: listTags)
