@@ -24,6 +24,11 @@ class FlashCardViewController: UIViewController {
     /// Passed in at init from the caller's already-loaded data; updated in-memory when the user marks a problem solved.
     private var solvedProblemIds: Set<String>
 
+    // MARK: - Timer State
+    private var countdownTimer: Timer?
+    private var remainingSeconds = 0
+    private static let timerDuration = 10 * 60  // V1: fixed 10-minute session
+
     // MARK: - Card UI
 
     private let cardContainer: UIView = {
@@ -154,6 +159,17 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Timer UI
+
+    private let timerLabel: UILabel = {
+        let l = UILabel()
+        l.font = UIFont.monospacedDigitSystemFont(ofSize: 14, weight: .medium)
+        l.textColor = .secondaryLabel
+        l.textAlignment = .center
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+
     // MARK: - Deck Navigation Buttons
 
     private let prevButton: UIButton = {
@@ -230,6 +246,9 @@ class FlashCardViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
         title = problem.title
         setupUI()
+        // Show the default session duration immediately so the label is never blank.
+        remainingSeconds = FlashCardViewController.timerDuration
+        updateTimerDisplay()
         setupGestures()
         setupNavigationBar()
         setupLikeButton()
@@ -241,11 +260,16 @@ class FlashCardViewController: UIViewController {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         becomeFirstResponder()
+        // V1: timer always restarts from the full duration whenever this VC appears.
+        startTimer()
     }
 
     // MARK: - Layout
 
     private func setupUI() {
+        // Timer label sits between the navigation bar and the card container.
+        view.addSubview(timerLabel)
+
         view.addSubview(cardContainer)
         cardContainer.addSubview(frontView)
         cardContainer.addSubview(backView)
@@ -278,8 +302,13 @@ class FlashCardViewController: UIViewController {
         leetcodeButton.addTarget(self, action: #selector(onLeetCodeTapped), for: .touchUpInside)
 
         NSLayoutConstraint.activate([
-            // Card container fills all space above the nav buttons
-            cardContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            timerLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 8),
+            timerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            timerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            timerLabel.heightAnchor.constraint(equalToConstant: 28),
+
+            // Card container's top attaches to the timer label so it is always properly spaced.
+            cardContainer.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 4),
             cardContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cardContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             cardContainer.bottomAnchor.constraint(equalTo: navButtonStack.topAnchor, constant: -16),
@@ -622,6 +651,48 @@ class FlashCardViewController: UIViewController {
     @objc private func onAnswerTapped() {
         let answerVC = AnswerViewController(problem: problem)
         navigationController?.pushViewController(answerVC, animated: true)
+    }
+
+    // MARK: - Timer
+
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        stopTimer()
+    }
+
+    deinit {
+        countdownTimer?.invalidate()
+    }
+
+    private func startTimer() {
+        stopTimer()  // Invalidates any existing timer before creating a new one, preventing duplicates.
+        remainingSeconds = FlashCardViewController.timerDuration
+        updateTimerDisplay()
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.remainingSeconds -= 1
+            self.updateTimerDisplay()
+            if self.remainingSeconds <= 0 {
+                self.handleTimerExpired()
+            }
+        }
+    }
+
+    private func stopTimer() {
+        countdownTimer?.invalidate()
+        countdownTimer = nil
+    }
+
+    private func updateTimerDisplay() {
+        let minutes = remainingSeconds / 60
+        let seconds = remainingSeconds % 60
+        timerLabel.text = "⏱ \(String(format: "%02d:%02d", minutes, seconds))"
+    }
+
+    private func handleTimerExpired() {
+        stopTimer()
+        timerLabel.text = "⏱ 00:00"
+        showAlert(title: "⏰ Time's Up!", message: "Your study session has ended.")
     }
 
     // MARK: - Helpers
