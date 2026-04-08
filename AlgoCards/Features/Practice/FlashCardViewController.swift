@@ -29,6 +29,17 @@ class FlashCardViewController: UIViewController {
     private var remainingSeconds = 0
     private static let timerDuration = 10 * 60  // V1: fixed 10-minute session
 
+    // MARK: - Hint State
+    /// Tracks how many hint levels the user has revealed for the current card.
+    /// Reset to 0 whenever the user navigates to a different problem.
+    private var hintLevel = 0
+    /// V1 placeholder hints. Replaced with Claude-generated content in V2.
+    private static let hintPlaceholders = [
+        "Think about which data structure best supports the operations this problem requires.",
+        "Consider the time and space trade-offs. Can you reduce the problem to a known pattern?",
+        "Try mapping this to sliding window, two pointers, or a recursive sub-problem structure."
+    ]
+
     // MARK: - Card UI
 
     private let cardContainer: UIView = {
@@ -395,23 +406,34 @@ class FlashCardViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-        let gotItButton = UIBarButtonItem(
+        let solvedButton = UIBarButtonItem(
             image: UIImage(systemName: "checkmark.circle"),
             style: .done,
             target: self,
             action: #selector(onSolvedTapped)
         )
-        gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
-        navigationItem.rightBarButtonItem = gotItButton
+        solvedButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+
+        let hintNavButton = UIBarButtonItem(
+            image: UIImage(systemName: "lightbulb"),
+            style: .plain,
+            target: self,
+            action: #selector(hintTapped)
+        )
+        hintNavButton.tintColor = .systemYellow
+
+        // [0] = solvedButton (rightmost), [1] = hintNavButton (to its left).
+        // updateSolvedButton() targets index 0; keep this order in sync if buttons change.
+        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton]
         updateSolvedButton()
     }
 
     private func updateSolvedButton() {
         let isSolved = solvedProblemIds.contains(problem.id)
-        navigationItem.rightBarButtonItem?.image = UIImage(
+        navigationItem.rightBarButtonItems?.first?.image = UIImage(
             systemName: isSolved ? "checkmark.circle.fill" : "checkmark.circle"
         )
-        navigationItem.rightBarButtonItem?.isEnabled = !isSolved
+        navigationItem.rightBarButtonItems?.first?.isEnabled = !isSolved
     }
 
     private func setupGestures() {
@@ -462,6 +484,7 @@ class FlashCardViewController: UIViewController {
         title = problem.title
         configureDifficultyBadge()
         updateNavButtons()
+        hintLevel = 0
 
         // Reset scroll positions so the new problem starts at the top
         frontScrollView.setContentOffset(.zero, animated: false)
@@ -651,6 +674,29 @@ class FlashCardViewController: UIViewController {
     @objc private func onAnswerTapped() {
         let answerVC = AnswerViewController(problem: problem)
         navigationController?.pushViewController(answerVC, animated: true)
+    }
+
+    // MARK: - Hints
+
+    @objc private func hintTapped() {
+        // V1: hints are accessible on both card sides; no flip-state restriction.
+        let total = FlashCardViewController.hintPlaceholders.count
+        let nextLevel = hintLevel + 1
+
+        let title: String
+        let message: String
+        if nextLevel <= total {
+            title = "Hint \(nextLevel) / \(total)"
+            message = FlashCardViewController.hintPlaceholders[nextLevel - 1]
+            hintLevel = nextLevel
+        } else {
+            title = "No More Hints"
+            message = "You've already seen all \(total) hints for this problem."
+        }
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     // MARK: - Timer
