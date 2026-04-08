@@ -29,6 +29,16 @@ class FlashCardViewController: UIViewController {
     private var remainingSeconds = 0
     private static let timerDuration = 10 * 60  // V1: fixed 10-minute session
 
+    // MARK: - Hint State
+    /// Tracks how many hint levels the user has revealed for the current card.
+    /// Reset to 0 whenever the user navigates to a different problem.
+    private var hintLevel = 0
+    /// Hints loaded for the current problem. Nil until the first HintService response.
+    /// Reset to nil in loadCurrentProblem() so a new problem always fetches fresh hints.
+    private var loadedHints: [String]?
+    /// Stored reference to the hint bar button for enabling/disabling during async fetch.
+    private var hintBarButton: UIBarButtonItem?
+
     // MARK: - Card UI
 
     private let cardContainer: UIView = {
@@ -395,23 +405,36 @@ class FlashCardViewController: UIViewController {
     }
 
     private func setupNavigationBar() {
-        let gotItButton = UIBarButtonItem(
+        let solvedButton = UIBarButtonItem(
             image: UIImage(systemName: "checkmark.circle"),
             style: .done,
             target: self,
             action: #selector(onSolvedTapped)
         )
-        gotItButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
-        navigationItem.rightBarButtonItem = gotItButton
+        solvedButton.tintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+
+        let hintNavButton = UIBarButtonItem(
+            image: UIImage(systemName: "lightbulb"),
+            style: .plain,
+            target: self,
+            action: #selector(hintTapped)
+        )
+        hintNavButton.tintColor = .systemYellow
+        // Store a direct reference so hintTapped() can enable/disable it without index access.
+        hintBarButton = hintNavButton
+
+        // [0] = solvedButton (rightmost), [1] = hintNavButton (to its left).
+        // updateSolvedButton() targets index 0; keep this order in sync if buttons change.
+        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton]
         updateSolvedButton()
     }
 
     private func updateSolvedButton() {
         let isSolved = solvedProblemIds.contains(problem.id)
-        navigationItem.rightBarButtonItem?.image = UIImage(
+        navigationItem.rightBarButtonItems?.first?.image = UIImage(
             systemName: isSolved ? "checkmark.circle.fill" : "checkmark.circle"
         )
-        navigationItem.rightBarButtonItem?.isEnabled = !isSolved
+        navigationItem.rightBarButtonItems?.first?.isEnabled = !isSolved
     }
 
     private func setupGestures() {
@@ -462,6 +485,8 @@ class FlashCardViewController: UIViewController {
         title = problem.title
         configureDifficultyBadge()
         updateNavButtons()
+        hintLevel = 0
+        loadedHints = nil  // Force a fresh HintService fetch for the new problem.
 
         // Reset scroll positions so the new problem starts at the top
         frontScrollView.setContentOffset(.zero, animated: false)
@@ -651,6 +676,50 @@ class FlashCardViewController: UIViewController {
     @objc private func onAnswerTapped() {
         let answerVC = AnswerViewController(problem: problem)
         navigationController?.pushViewController(answerVC, animated: true)
+    }
+
+    // MARK: - Hints
+
+    @objc private func hintTapped() {
+        // Hints are accessible on both card sides; no flip-state restriction.
+
+        // If hints were already fetched for this problem, show immediately — no network needed.
+        if let hints = loadedHints {
+            showHint(from: hints)
+            return
+        }
+
+        // First tap for this problem: fetch from HintService (Firestore cache or placeholder).
+        // Disable the button to prevent duplicate requests while the fetch is in flight.
+        let expectedProblemId = problem.id
+        hintBarButton?.isEnabled = false
+
+        HintService.shared.getHints(for: expectedProblemId) { [weak self] hints in
+            guard let self, self.problem.id == expectedProblemId else { return }
+            self.hintBarButton?.isEnabled = true
+            self.loadedHints = hints
+            self.showHint(from: hints)
+        }
+    }
+
+    private func showHint(from hints: [String]) {
+        let total = hints.count
+        let nextLevel = hintLevel + 1
+
+        let title: String
+        let message: String
+        if nextLevel <= total {
+            title = "Hint \(nextLevel) / \(total)"
+            message = hints[nextLevel - 1]
+            hintLevel = nextLevel
+        } else {
+            title = "No More Hints"
+            message = "You've already seen all \(total) hints for this problem."
+        }
+
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        present(alert, animated: true)
     }
 
     // MARK: - Timer

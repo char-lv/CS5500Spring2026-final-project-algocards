@@ -28,6 +28,7 @@ class FirestoreService {
     private var submissionsRef: CollectionReference { db.collection("submissions") }
     private var commentsRef: CollectionReference { db.collection("comments") }
     private var metadataRef: CollectionReference { db.collection("metadata") }
+    private var problemHintsRef: CollectionReference { db.collection("problemHints") }
 
     // Problems
     func fetchProblems(
@@ -386,6 +387,45 @@ class FirestoreService {
                 } ?? []
                 completion(.success(users))
             }
+    }
+
+    // Hints
+
+    /// Fetches cached hints for a problem from the `problemHints` collection.
+    /// Returns `.success(nil)` if no document exists yet — not an error.
+    /// Returns `.success([String])` only when a valid hints array is present.
+    func fetchHints(
+        problemId: String,
+        completion: @escaping (Result<[String]?, Error>) -> Void
+    ) {
+        problemHintsRef.document(problemId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+            guard let data = snapshot?.data(),
+                  let hints = data["hints"] as? [String] else {
+                completion(.success(nil))
+                return
+            }
+            completion(.success(hints))
+        }
+    }
+
+    /// Writes 3 hints for a problem into the `problemHints` collection.
+    /// Uses setData (not merge) so the document is always a complete, consistent record.
+    /// Called by HintService once Claude generates hints in V2.
+    func saveHints(
+        _ hints: [String],
+        for problemId: String,
+        completion: ((Error?) -> Void)? = nil
+    ) {
+        problemHintsRef.document(problemId).setData([
+            "hints": hints,
+            "generatedAt": FieldValue.serverTimestamp()
+        ]) { error in
+            completion?(error)
+        }
     }
 
     // Comments
