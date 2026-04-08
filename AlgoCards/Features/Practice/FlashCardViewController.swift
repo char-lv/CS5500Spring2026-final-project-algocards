@@ -33,12 +33,11 @@ class FlashCardViewController: UIViewController {
     /// Tracks how many hint levels the user has revealed for the current card.
     /// Reset to 0 whenever the user navigates to a different problem.
     private var hintLevel = 0
-    /// V1 placeholder hints. Replaced with Claude-generated content in V2.
-    private static let hintPlaceholders = [
-        "Think about which data structure best supports the operations this problem requires.",
-        "Consider the time and space trade-offs. Can you reduce the problem to a known pattern?",
-        "Try mapping this to sliding window, two pointers, or a recursive sub-problem structure."
-    ]
+    /// Hints loaded for the current problem. Nil until the first HintService response.
+    /// Reset to nil in loadCurrentProblem() so a new problem always fetches fresh hints.
+    private var loadedHints: [String]?
+    /// Stored reference to the hint bar button for enabling/disabling during async fetch.
+    private var hintBarButton: UIBarButtonItem?
 
     // MARK: - Card UI
 
@@ -421,6 +420,8 @@ class FlashCardViewController: UIViewController {
             action: #selector(hintTapped)
         )
         hintNavButton.tintColor = .systemYellow
+        // Store a direct reference so hintTapped() can enable/disable it without index access.
+        hintBarButton = hintNavButton
 
         // [0] = solvedButton (rightmost), [1] = hintNavButton (to its left).
         // updateSolvedButton() targets index 0; keep this order in sync if buttons change.
@@ -485,6 +486,7 @@ class FlashCardViewController: UIViewController {
         configureDifficultyBadge()
         updateNavButtons()
         hintLevel = 0
+        loadedHints = nil  // Force a fresh HintService fetch for the new problem.
 
         // Reset scroll positions so the new problem starts at the top
         frontScrollView.setContentOffset(.zero, animated: false)
@@ -679,15 +681,36 @@ class FlashCardViewController: UIViewController {
     // MARK: - Hints
 
     @objc private func hintTapped() {
-        // V1: hints are accessible on both card sides; no flip-state restriction.
-        let total = FlashCardViewController.hintPlaceholders.count
+        // Hints are accessible on both card sides; no flip-state restriction.
+
+        // If hints were already fetched for this problem, show immediately — no network needed.
+        if let hints = loadedHints {
+            showHint(from: hints)
+            return
+        }
+
+        // First tap for this problem: fetch from HintService (Firestore cache or placeholder).
+        // Disable the button to prevent duplicate requests while the fetch is in flight.
+        let expectedProblemId = problem.id
+        hintBarButton?.isEnabled = false
+
+        HintService.shared.getHints(for: expectedProblemId) { [weak self] hints in
+            guard let self, self.problem.id == expectedProblemId else { return }
+            self.hintBarButton?.isEnabled = true
+            self.loadedHints = hints
+            self.showHint(from: hints)
+        }
+    }
+
+    private func showHint(from hints: [String]) {
+        let total = hints.count
         let nextLevel = hintLevel + 1
 
         let title: String
         let message: String
         if nextLevel <= total {
             title = "Hint \(nextLevel) / \(total)"
-            message = FlashCardViewController.hintPlaceholders[nextLevel - 1]
+            message = hints[nextLevel - 1]
             hintLevel = nextLevel
         } else {
             title = "No More Hints"
