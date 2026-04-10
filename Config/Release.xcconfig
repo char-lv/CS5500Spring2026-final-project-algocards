@@ -2,5 +2,7 @@
 
 OPENAI_API_KEY =
 OPENAI_RECOMMENDATION_MODEL = gpt-4.1-mini
+ANTHROPIC_API_KEY =
+CLAUDE_HINT_MODEL = claude-haiku-4-5-20251001
 
 #include? "LocalSecrets.xcconfig"

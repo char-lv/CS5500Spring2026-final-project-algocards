@@ -621,8 +621,12 @@ class FlashCardViewController: UIViewController {
         isFlipped = false
         if loading {
             activityIndicator.startAnimating()
+            // Disable hint while problem content is loading — description may not be
+            // in NetworkManager's cache yet, which HintGenerator needs for Claude.
+            hintBarButton?.isEnabled = false
         } else {
             activityIndicator.stopAnimating()
+            hintBarButton?.isEnabled = true
         }
     }
 
@@ -691,11 +695,11 @@ class FlashCardViewController: UIViewController {
 
         // First tap for this problem: fetch from HintService (Firestore cache or placeholder).
         // Disable the button to prevent duplicate requests while the fetch is in flight.
-        let expectedProblemId = problem.id
+        let expectedProblem = problem
         hintBarButton?.isEnabled = false
 
-        HintService.shared.getHints(for: expectedProblemId) { [weak self] hints in
-            guard let self, self.problem.id == expectedProblemId else { return }
+        HintService.shared.getHints(for: expectedProblem) { [weak self] hints in
+            guard let self, self.problem.id == expectedProblem.id else { return }
             self.hintBarButton?.isEnabled = true
             self.loadedHints = hints
             self.showHint(from: hints)
