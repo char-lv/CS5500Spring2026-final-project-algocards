@@ -170,10 +170,10 @@ class HomeViewController: UIViewController {
         setupUI()
 
         navigationItem.rightBarButtonItem = UIBarButtonItem(
-            title: "Sign Out",
+            image: UIImage(systemName: "person.circle"),
             style: .plain,
             target: self,
-            action: #selector(signOutTapped)
+            action: #selector(profileTapped)
         )
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "trophy"),
@@ -204,10 +204,8 @@ class HomeViewController: UIViewController {
         navigationController?.pushViewController(LeaderboardViewController(), animated: true)
     }
 
-    @objc private func signOutTapped() {
-        AuthService.shared.signOut()
-        guard let sceneDelegate = view.window?.windowScene?.delegate as? SceneDelegate else { return }
-        sceneDelegate.showAuth()
+    @objc private func profileTapped() {
+        navigationController?.pushViewController(ProfileViewController(), animated: true)
     }
 
     @objc private func refreshRecommendationTapped() {

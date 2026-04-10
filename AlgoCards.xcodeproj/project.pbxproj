@@ -31,6 +31,7 @@
 		CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */; };
 		CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */; };
 		CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */; };
+		A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */; };
 		D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A1C0023A24A10000000001 /* RecommendationService.swift */; };
 		D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100023A25000000000001 /* ProblemDeckConfig.swift */; };
 		D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100043A25000000000001 /* LeetCodeConfig.swift */; };
@@ -68,6 +69,7 @@
 		CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardViewController.swift; sourceTree = "<group>"; };
 		CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerViewController.swift; sourceTree = "<group>"; };
 		CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewController.swift; sourceTree = "<group>"; };
+		A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		D1A1C0023A24A10000000001 /* RecommendationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationService.swift; sourceTree = "<group>"; };
 		D2A100023A25000000000001 /* ProblemDeckConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemDeckConfig.swift; sourceTree = "<group>"; };
 		D2A100043A25000000000001 /* LeetCodeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeetCodeConfig.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 		CBF3B2D22F516FE90065C963 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
+				A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -411,6 +414,7 @@
 				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,
 				CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */,
+				A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
