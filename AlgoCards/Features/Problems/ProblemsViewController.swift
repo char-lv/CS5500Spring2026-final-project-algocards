@@ -17,6 +17,7 @@ class ProblemsViewController: UIViewController {
     private var preloadedProblems: [ProblemListItem]?
     private var overrideIcon: String?
     private var overrideAccent: UIColor?
+    private var overrideDescriptionText: String?
 
     init(listTag: String, title: String) {
         self.listTag = listTag
@@ -26,11 +27,18 @@ class ProblemsViewController: UIViewController {
     }
 
     /// Init for Profile lists (Mastered / Liked) — skips Firestore fetch.
-    convenience init(preloadedProblems: [ProblemListItem], title: String, icon: String, accent: UIColor) {
+    convenience init(
+        preloadedProblems: [ProblemListItem],
+        title: String,
+        icon: String,
+        accent: UIColor,
+        descriptionText: String? = nil
+    ) {
         self.init(listTag: "__preloaded__", title: title)
         self.preloadedProblems = preloadedProblems
         self.overrideIcon = icon
         self.overrideAccent = accent
+        self.overrideDescriptionText = descriptionText
     }
 
     required init?(coder: NSCoder) { fatalError() }
@@ -203,9 +211,13 @@ class ProblemsViewController: UIViewController {
         deckIconBadge.text = overrideIcon ?? ProblemDeckConfig.icon(forListTag: listTag)
         deckIconBadge.backgroundColor = accentColor.withAlphaComponent(0.16)
         deckTitleLabel.text = deckTitleText
-        deckDescriptionLabel.text = preloadedProblems != nil
-            ? "Your saved \(deckTitleText.lowercased()) — filter by difficulty or search by title."
-            : descriptionText(for: listTag, title: deckTitleText)
+        if let overrideDescriptionText {
+            deckDescriptionLabel.text = overrideDescriptionText
+        } else {
+            deckDescriptionLabel.text = preloadedProblems != nil
+                ? "Your saved \(deckTitleText.lowercased()) — filter by difficulty or search by title."
+                : descriptionText(for: listTag, title: deckTitleText)
+        }
         progressLabel.textColor = accentColor
         progressLabel.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.82)
         searchBar.placeholder = searchPlaceholder(for: deckTitleText)

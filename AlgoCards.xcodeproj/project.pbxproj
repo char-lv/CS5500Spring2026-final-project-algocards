@@ -10,6 +10,7 @@
 		13F27448A45E2B9B413D0AD5 /* Pods_AlgoCards.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */; };
 		1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1816EDE32F6D33AA007480FE /* AuthViewController.swift */; };
 		183A3EB12F85E53600DE68CB /* HintService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 183A3EB02F85E53600DE68CB /* HintService.swift */; };
+		A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */; };
 		CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */; };
 		CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */; };
 		CBD3E2C82F516CFE008663AB /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = CBD3E2C72F516CFE008663AB /* Assets.xcassets */; };
@@ -31,11 +32,15 @@
 		CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */; };
 		CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */; };
 		CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */; };
-		A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */; };
 		D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A1C0023A24A10000000001 /* RecommendationService.swift */; };
 		D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100023A25000000000001 /* ProblemDeckConfig.swift */; };
 		D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100043A25000000000001 /* LeetCodeConfig.swift */; };
 		D2A100053A25000000000001 /* LegacyMirrorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100063A25000000000001 /* LegacyMirrorConfig.swift */; };
+		E30000013B00000000000001 /* SocialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000023B00000000000001 /* SocialViewController.swift */; };
+		E30000033B00000000000001 /* SocialUserProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000043B00000000000001 /* SocialUserProfileViewController.swift */; };
+		E30000053B00000000000001 /* SocialUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000063B00000000000001 /* SocialUserCell.swift */; };
+		E30000073B00000000000001 /* SocialUserSummary.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000083B00000000000001 /* SocialUserSummary.swift */; };
+		E30000093B00000000000001 /* SocialCollectionLikeState.swift in Sources */ = {isa = PBXBuildFile; fileRef = E300000A3B00000000000001 /* SocialCollectionLikeState.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -43,6 +48,7 @@
 		183A3EB02F85E53600DE68CB /* HintService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HintService.swift; sourceTree = "<group>"; };
 		1A3E703F584EB900726A88F9 /* Pods-AlgoCards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.debug.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.debug.xcconfig"; sourceTree = "<group>"; };
 		2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AlgoCards.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		AC1000013A24B00000000001 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Debug.xcconfig; sourceTree = "<group>"; };
 		AC1000023A24B00000000001 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
 		AC1000033A24B00000000001 /* LocalSecrets.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = LocalSecrets.xcconfig.example; sourceTree = "<group>"; };
@@ -69,11 +75,15 @@
 		CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlashCardViewController.swift; sourceTree = "<group>"; };
 		CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnswerViewController.swift; sourceTree = "<group>"; };
 		CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeaderboardViewController.swift; sourceTree = "<group>"; };
-		A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
 		D1A1C0023A24A10000000001 /* RecommendationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecommendationService.swift; sourceTree = "<group>"; };
 		D2A100023A25000000000001 /* ProblemDeckConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemDeckConfig.swift; sourceTree = "<group>"; };
 		D2A100043A25000000000001 /* LeetCodeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeetCodeConfig.swift; sourceTree = "<group>"; };
 		D2A100063A25000000000001 /* LegacyMirrorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMirrorConfig.swift; sourceTree = "<group>"; };
+		E30000023B00000000000001 /* SocialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialViewController.swift; sourceTree = "<group>"; };
+		E30000043B00000000000001 /* SocialUserProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialUserProfileViewController.swift; sourceTree = "<group>"; };
+		E30000063B00000000000001 /* SocialUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialUserCell.swift; sourceTree = "<group>"; };
+		E30000083B00000000000001 /* SocialUserSummary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialUserSummary.swift; sourceTree = "<group>"; };
+		E300000A3B00000000000001 /* SocialCollectionLikeState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialCollectionLikeState.swift; sourceTree = "<group>"; };
 		E9E01750B4111811F5F646F3 /* Pods-AlgoCards.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.release.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -189,6 +199,7 @@
 				CBF3B2D02F516FE90065C963 /* Practice */,
 				CBF3B2D12F516FE90065C963 /* Problems */,
 				CBF3B2D22F516FE90065C963 /* Profile */,
+				E300000B3B00000000000001 /* Social */,
 				CHL45C022F6B0001007739CB /* Leaderboard */,
 			);
 			path = Features;
@@ -238,6 +249,8 @@
 			children = (
 				CBF3B2EA2F5183600065C963 /* Problem.swift */,
 				CBF3B2EC2F51836E0065C963 /* User.swift */,
+				E30000083B00000000000001 /* SocialUserSummary.swift */,
+				E300000A3B00000000000001 /* SocialCollectionLikeState.swift */,
 				CBF3B2EE2F51837A0065C963 /* Answer.swift */,
 				CBF3B2F02F5183820065C963 /* Comment.swift */,
 			);
@@ -273,6 +286,24 @@
 				CHL45C002F6B0001007739CB /* LeaderboardViewController.swift */,
 			);
 			path = Leaderboard;
+			sourceTree = "<group>";
+		};
+		E300000B3B00000000000001 /* Social */ = {
+			isa = PBXGroup;
+			children = (
+				E30000063B00000000000001 /* SocialUserCell.swift */,
+				E30000023B00000000000001 /* SocialViewController.swift */,
+				E30000043B00000000000001 /* SocialUserProfileViewController.swift */,
+				E300000C3B00000000000001 /* Views */,
+			);
+			path = Social;
+			sourceTree = "<group>";
+		};
+		E300000C3B00000000000001 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -400,11 +431,15 @@
 				CBF3B2EB2F5183600065C963 /* Problem.swift in Sources */,
 				D2A100053A25000000000001 /* LegacyMirrorConfig.swift in Sources */,
 				183A3EB12F85E53600DE68CB /* HintService.swift in Sources */,
+				E30000073B00000000000001 /* SocialUserSummary.swift in Sources */,
 				CBF45C292F58E2BA007739CB /* ProblemsViewController.swift in Sources */,
 				D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */,
 				D1A1C0013A24A10000000001 /* RecommendationService.swift in Sources */,
 				CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */,
+				E30000033B00000000000001 /* SocialUserProfileViewController.swift in Sources */,
+				E30000013B00000000000001 /* SocialViewController.swift in Sources */,
 				CBF3B2F12F5183820065C963 /* Comment.swift in Sources */,
+				E30000093B00000000000001 /* SocialCollectionLikeState.swift in Sources */,
 				CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */,
 				CBF45C212F58DDE5007739CB /* ProblemCell.swift in Sources */,
 				CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */,
@@ -414,6 +449,7 @@
 				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,
 				CHL45C012F6B0001007739CB /* LeaderboardViewController.swift in Sources */,
+				E30000053B00000000000001 /* SocialUserCell.swift in Sources */,
 				A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

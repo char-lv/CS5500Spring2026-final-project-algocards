@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import FirebaseFirestore
 
 class ProfileViewController: UIViewController {
 
@@ -15,7 +16,9 @@ class ProfileViewController: UIViewController {
 
     private var masteredCountLabel: UILabel?
     private var likedCountLabel: UILabel?
+    private var collectionLikesCountLabel: UILabel?
     private var hasAnimatedIn = false
+    private var profileListener: ListenerRegistration?
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -132,6 +135,10 @@ class ProfileViewController: UIViewController {
         avatarGradient.frame = avatarView.bounds
     }
 
+    deinit {
+        profileListener?.remove()
+    }
+
 
     private func setupUI() {
         view.addSubview(scrollView)
@@ -233,14 +240,23 @@ class ProfileViewController: UIViewController {
             labelText: "Liked",
             accent: UIColor(red: 0.482, green: 0.561, blue: 0.631, alpha: 1.0)
         )
+        let (collectionLikesCard, collectionLikesCount) = buildStatTile(
+            sfIcon: "hand.thumbsup.fill",
+            labelText: "Collection Likes",
+            accent: .systemOrange
+        )
 
         masteredCountLabel = masteredCount
         likedCountLabel = likedCount
+        collectionLikesCountLabel = collectionLikesCount
 
         row.addArrangedSubview(masteredCard)
         row.addArrangedSubview(likedCard)
+        row.addArrangedSubview(collectionLikesCard)
 
-        masteredCard.heightAnchor.constraint(equalToConstant: 112).isActive = true
+        [masteredCard, likedCard, collectionLikesCard].forEach {
+            $0.heightAnchor.constraint(equalToConstant: 112).isActive = true
+        }
 
         contentStack.addArrangedSubview(row)
     }
@@ -406,29 +422,22 @@ class ProfileViewController: UIViewController {
 
     private func loadUserData() {
         guard let userId = AuthService.shared.currentUserId else { return }
+        profileListener?.remove()
+        profileListener = FirestoreService.shared.observeUserProfileLiveData(userId: userId) { [weak self] result in
+            DispatchQueue.main.async {
+                guard let self else { return }
 
-        let group = DispatchGroup()
-        var fetchedUser: User?
-        var fetchedLikedIds: [String] = []
-
-        group.enter()
-        FirestoreService.shared.fetchUser(userId: userId) { result in
-            if case .success(let u) = result { fetchedUser = u }
-            group.leave()
-        }
-
-        group.enter()
-        FirestoreService.shared.fetchLikedProblemIds(userId: userId) { result in
-            if case .success(let ids) = result { fetchedLikedIds = ids }
-            group.leave()
-        }
-
-        group.notify(queue: .main) { [weak self] in
-            guard let self else { return }
-            self.user = fetchedUser
-            self.masteredIds = fetchedUser?.solvedProblemIds ?? []
-            self.likedIds = fetchedLikedIds
-            self.renderProfile()
+                switch result {
+                case .success(let liveData):
+                    self.user = liveData.user
+                    self.masteredIds = liveData.user.solvedProblemIds
+                    self.likedIds = liveData.likedProblemIds
+                    self.collectionLikesCountLabel?.text = "\(liveData.likedCollectionLikeCount)"
+                    self.renderProfile()
+                case .failure(let error):
+                    print("[ProfileViewController] Failed to observe profile data: \(error.localizedDescription)")
+                }
+            }
         }
     }
 

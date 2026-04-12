@@ -5,14 +5,24 @@
 //  Created by Minghui Xu on 3/4/26.
 //
 
-// TODO: Implement in feature/auth branch
-
 import Foundation
 import FirebaseFirestore
 
 struct ProblemListTagStat {
     let tag: String
     let count: Int
+}
+
+struct UserProfileLiveData {
+    let user: User
+    let likedProblemIds: [String]
+    let likedCollectionLikeCount: Int
+}
+
+struct SocialUserProfileLiveData {
+    let summary: SocialUserSummary
+    let solvedProblemIds: [String]
+    let likedProblemIds: [String]
 }
 
 class FirestoreService {
@@ -29,6 +39,10 @@ class FirestoreService {
     private var commentsRef: CollectionReference { db.collection("comments") }
     private var metadataRef: CollectionReference { db.collection("metadata") }
     private var problemHintsRef: CollectionReference { db.collection("problemHints") }
+
+    private func likedCollectionLikesRef(ownerUserId: String) -> CollectionReference {
+        usersRef.document(ownerUserId).collection("likedCollectionLikes")
+    }
 
     // Problems
     func fetchProblems(
@@ -239,6 +253,40 @@ class FirestoreService {
         }
     }
 
+    @discardableResult
+    func observeUserProfileLiveData(
+        userId: String,
+        onChange: @escaping (Result<UserProfileLiveData, Error>) -> Void
+    ) -> ListenerRegistration {
+        usersRef.document(userId).addSnapshotListener { [weak self] snapshot, error in
+            guard let self else { return }
+
+            if let error = error {
+                onChange(.failure(error))
+                return
+            }
+
+            guard let snapshot, snapshot.exists, let user = self.makeUser(from: snapshot) else {
+                onChange(.failure(NSError(
+                    domain: "FirestoreService",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "User not found."]
+                )))
+                return
+            }
+
+            let data = snapshot.data() ?? [:]
+            let likedProblemIds = data["likedProblemIds"] as? [String] ?? []
+            let likedCollectionLikeCount = data["likedCollectionLikeCount"] as? Int ?? 0
+
+            onChange(.success(UserProfileLiveData(
+                user: user,
+                likedProblemIds: likedProblemIds,
+                likedCollectionLikeCount: likedCollectionLikeCount
+            )))
+        }
+    }
+
     func updateUserName(userId: String, newName: String, completion: @escaping (Error?) -> Void) {
         usersRef.document(userId).updateData(["userName": newName]) { error in
             completion(error)
@@ -389,6 +437,218 @@ class FirestoreService {
             }
     }
 
+    // Social
+    func fetchSocialUsers(
+        excluding excludedUserId: String?,
+        limit: Int = 50,
+        completion: @escaping (Result<[SocialUserSummary], Error>) -> Void
+    ) {
+        usersRef
+            .order(by: "score", descending: true)
+            .limit(to: limit)
+            .getDocuments { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                let users = snapshot?.documents.compactMap { document -> SocialUserSummary? in
+                    let summary = self.makeSocialUserSummary(from: document)
+                    guard summary?.id != excludedUserId else { return nil }
+                    return summary
+                } ?? []
+
+                completion(.success(users))
+            }
+    }
+
+    @discardableResult
+    func observeSocialUsers(
+        excluding excludedUserId: String?,
+        limit: Int = 50,
+        onChange: @escaping (Result<[SocialUserSummary], Error>) -> Void
+    ) -> ListenerRegistration {
+        usersRef
+            .order(by: "score", descending: true)
+            .limit(to: limit)
+            .addSnapshotListener { snapshot, error in
+                if let error = error {
+                    onChange(.failure(error))
+                    return
+                }
+
+                let users = snapshot?.documents.compactMap { document -> SocialUserSummary? in
+                    let summary = self.makeSocialUserSummary(from: document)
+                    guard summary?.id != excludedUserId else { return nil }
+                    return summary
+                } ?? []
+
+                onChange(.success(users))
+            }
+    }
+
+    func fetchSocialUserSummary(
+        userId: String,
+        completion: @escaping (Result<SocialUserSummary, Error>) -> Void
+    ) {
+        usersRef.document(userId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            guard let snapshot, snapshot.exists, let summary = self.makeSocialUserSummary(from: snapshot) else {
+                completion(.failure(NSError(
+                    domain: "FirestoreService",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "User not found."]
+                )))
+                return
+            }
+
+            completion(.success(summary))
+        }
+    }
+
+    @discardableResult
+    func observeSocialUserProfileLiveData(
+        userId: String,
+        onChange: @escaping (Result<SocialUserProfileLiveData, Error>) -> Void
+    ) -> ListenerRegistration {
+        usersRef.document(userId).addSnapshotListener { [weak self] snapshot, error in
+            guard let self else { return }
+
+            if let error = error {
+                onChange(.failure(error))
+                return
+            }
+
+            guard let snapshot, snapshot.exists, let summary = self.makeSocialUserSummary(from: snapshot) else {
+                onChange(.failure(NSError(
+                    domain: "FirestoreService",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "User not found."]
+                )))
+                return
+            }
+
+            let data = snapshot.data() ?? [:]
+            let solvedProblemIds = data["solvedProblemIds"] as? [String] ?? []
+            let likedProblemIds = data["likedProblemIds"] as? [String] ?? []
+
+            onChange(.success(SocialUserProfileLiveData(
+                summary: summary,
+                solvedProblemIds: solvedProblemIds,
+                likedProblemIds: likedProblemIds
+            )))
+        }
+    }
+
+    func fetchLikedCollectionLikeCount(
+        ownerUserId: String,
+        completion: @escaping (Result<Int, Error>) -> Void
+    ) {
+        usersRef.document(ownerUserId).getDocument { snapshot, error in
+            if let error = error {
+                completion(.failure(error))
+                return
+            }
+
+            let count = snapshot?.data()?["likedCollectionLikeCount"] as? Int ?? 0
+            completion(.success(count))
+        }
+    }
+
+    func fetchLikedCollectionViewerState(
+        ownerUserId: String,
+        viewerUserId: String?,
+        completion: @escaping (Result<Bool, Error>) -> Void
+    ) {
+        guard let viewerUserId, viewerUserId != ownerUserId else {
+            completion(.success(false))
+            return
+        }
+
+        likedCollectionLikesRef(ownerUserId: ownerUserId)
+            .document(viewerUserId)
+            .getDocument { snapshot, error in
+                if let error = error {
+                    completion(.failure(error))
+                    return
+                }
+
+                completion(.success(snapshot?.exists == true))
+            }
+    }
+
+    @discardableResult
+    func observeLikedCollectionLikeCount(
+        ownerUserId: String,
+        onChange: @escaping (Result<Int, Error>) -> Void
+    ) -> ListenerRegistration {
+        usersRef.document(ownerUserId).addSnapshotListener { snapshot, error in
+            if let error = error {
+                onChange(.failure(error))
+                return
+            }
+
+            let count = snapshot?.data()?["likedCollectionLikeCount"] as? Int ?? 0
+            onChange(.success(count))
+        }
+    }
+
+    func setLikedCollectionLike(
+        ownerUserId: String,
+        viewerUserId: String,
+        liked: Bool,
+        completion: @escaping (Error?) -> Void
+    ) {
+        guard ownerUserId != viewerUserId else {
+            completion(NSError(
+                domain: "FirestoreService",
+                code: -1,
+                userInfo: [NSLocalizedDescriptionKey: "You cannot like your own collection."]
+            ))
+            return
+        }
+
+        let ownerDoc = usersRef.document(ownerUserId)
+        let likeDoc = likedCollectionLikesRef(ownerUserId: ownerUserId).document(viewerUserId)
+
+        db.runTransaction({ transaction, errorPointer in
+            do {
+                let ownerSnapshot = try transaction.getDocument(ownerDoc)
+                let likeSnapshot = try transaction.getDocument(likeDoc)
+                let currentCount = ownerSnapshot.data()?["likedCollectionLikeCount"] as? Int ?? 0
+                let currentlyLiked = likeSnapshot.exists
+
+                if liked {
+                    guard !currentlyLiked else { return nil }
+                    transaction.setData([
+                        "ownerUserId": ownerUserId,
+                        "viewerUserId": viewerUserId,
+                        "createdAt": FieldValue.serverTimestamp()
+                    ], forDocument: likeDoc, merge: true)
+                    transaction.setData([
+                        "likedCollectionLikeCount": currentCount + 1
+                    ], forDocument: ownerDoc, merge: true)
+                } else {
+                    guard currentlyLiked else { return nil }
+                    transaction.deleteDocument(likeDoc)
+                    transaction.setData([
+                        "likedCollectionLikeCount": max(0, currentCount - 1)
+                    ], forDocument: ownerDoc, merge: true)
+                }
+            } catch {
+                errorPointer?.pointee = error as NSError
+            }
+
+            return nil
+        }) { _, error in
+            completion(error)
+        }
+    }
+
     // Hints
 
     /// Fetches cached hints for a problem from the `problemHints` collection.
@@ -489,5 +749,41 @@ class FirestoreService {
         )
 
         return ProblemCatalogItem(problem: problem, listTags: listTags)
+    }
+
+    private func makeSocialUserSummary(from document: DocumentSnapshot) -> SocialUserSummary? {
+        let data = document.data() ?? [:]
+        guard let userName = data["userName"] as? String, !userName.isEmpty else { return nil }
+
+        let solvedIds = data["solvedProblemIds"] as? [String] ?? []
+        let likedIds = data["likedProblemIds"] as? [String] ?? []
+
+        return SocialUserSummary(
+            id: document.documentID,
+            userName: userName,
+            score: data["score"] as? Int ?? 0,
+            solvedCount: solvedIds.count,
+            likedCount: likedIds.count,
+            likedCollectionLikeCount: data["likedCollectionLikeCount"] as? Int ?? 0,
+            profilePicURL: data["profilePicURL"] as? String
+        )
+    }
+
+    private func makeUser(from document: DocumentSnapshot) -> User? {
+        let data = document.data() ?? [:]
+        guard
+            let userName = data["userName"] as? String,
+            !userName.isEmpty,
+            let email = data["email"] as? String
+        else {
+            return nil
+        }
+
+        var user = User(id: document.documentID, userName: userName, email: email)
+        user.profilePicURL = data["profilePicURL"] as? String
+        user.score = data["score"] as? Int ?? 0
+        user.solvedProblemIds = data["solvedProblemIds"] as? [String] ?? []
+        user.commentIds = data["commentIds"] as? [String] ?? []
+        return user
     }
 }
