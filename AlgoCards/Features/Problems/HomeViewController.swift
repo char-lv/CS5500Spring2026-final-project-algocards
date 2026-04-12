@@ -84,10 +84,12 @@ class HomeViewController: UIViewController {
 
     private let recommendationCard: UIView = {
         let v = UIView()
-        v.backgroundColor = UIColor(red: 0.96, green: 0.98, blue: 1.0, alpha: 1.0)
-        v.layer.cornerRadius = 16
-        v.layer.borderWidth = 1
-        v.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.15).cgColor
+        v.backgroundColor = .systemBackground
+        v.layer.cornerRadius = 18
+        v.layer.shadowColor = UIColor.black.cgColor
+        v.layer.shadowOpacity = 0.07
+        v.layer.shadowOffset = CGSize(width: 0, height: 3)
+        v.layer.shadowRadius = 12
         v.translatesAutoresizingMaskIntoConstraints = false
         return v
     }()
@@ -165,7 +167,7 @@ class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemBackground
+        view.backgroundColor = .systemGroupedBackground
         navigationItem.title = ""
         print("[HomeViewController] Loaded — current UID: \(AuthService.shared.currentUserId ?? "nil")")
         setupUI()
@@ -202,6 +204,40 @@ class HomeViewController: UIViewController {
         guard !hasAnimatedIn else { return }
         hasAnimatedIn = true
         animateSectionsIn()
+    }
+
+    // MARK: - Press Animations
+
+    @objc private func cardPressDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.12) {
+            sender.transform = CGAffineTransform(scaleX: 0.96, y: 0.96)
+        }
+    }
+
+    @objc private func cardPressUp(_ sender: UIButton) {
+        UIView.animate(
+            withDuration: 0.28, delay: 0,
+            usingSpringWithDamping: 0.68, initialSpringVelocity: 0.6,
+            options: .allowUserInteraction
+        ) {
+            sender.transform = .identity
+        }
+    }
+
+    @objc private func chipPressDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.10) {
+            sender.superview?.transform = CGAffineTransform(scaleX: 0.93, y: 0.93)
+        }
+    }
+
+    @objc private func chipPressUp(_ sender: UIButton) {
+        UIView.animate(
+            withDuration: 0.25, delay: 0,
+            usingSpringWithDamping: 0.70, initialSpringVelocity: 0.5,
+            options: .allowUserInteraction
+        ) {
+            sender.superview?.transform = .identity
+        }
     }
 
     @objc private func leaderboardTapped() {
@@ -358,12 +394,14 @@ class HomeViewController: UIViewController {
     ) -> UIView {
         let card = UIButton(type: .system)
         card.backgroundColor = item.color.withAlphaComponent(0.10)
-        card.layer.cornerRadius = 16
+        card.layer.cornerRadius = 18
         card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.06
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 8
+        card.layer.shadowOpacity = 0.07
+        card.layer.shadowOffset = CGSize(width: 0, height: 3)
+        card.layer.shadowRadius = 12
         card.tag = index
+        card.addTarget(self, action: #selector(cardPressDown(_:)), for: .touchDown)
+        card.addTarget(self, action: #selector(cardPressUp(_:)), for: [.touchUpOutside, .touchCancel])
         card.addTarget(self, action: #selector(curatedTapped(_:)), for: .touchUpInside)
 
         let stack = UIStackView()
@@ -491,6 +529,8 @@ class HomeViewController: UIViewController {
         // Transparent button overlay handles taps without disrupting size calculation
         let btn = UIButton(type: .system)
         btn.tag = index
+        btn.addTarget(self, action: #selector(chipPressDown(_:)), for: .touchDown)
+        btn.addTarget(self, action: #selector(chipPressUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.addTarget(self, action: #selector(categoryTapped(_:)), for: .touchUpInside)
         btn.translatesAutoresizingMaskIntoConstraints = false
         chip.addSubview(btn)
@@ -514,14 +554,36 @@ class HomeViewController: UIViewController {
 
     private func makeDailyChallengeCard() -> UIView {
         let btn = UIButton(type: .system)
-        btn.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.12)
-        btn.layer.cornerRadius = 16
+        btn.backgroundColor = .systemBackground
+        btn.layer.cornerRadius = 18
+        btn.layer.shadowColor = UIColor.black.cgColor
+        btn.layer.shadowOpacity = 0.07
+        btn.layer.shadowOffset = CGSize(width: 0, height: 3)
+        btn.layer.shadowRadius = 12
+        btn.addTarget(self, action: #selector(cardPressDown(_:)), for: .touchDown)
+        btn.addTarget(self, action: #selector(cardPressUp(_:)), for: [.touchUpOutside, .touchCancel])
         btn.addTarget(self, action: #selector(dailyTapped), for: .touchUpInside)
+
+        // Accent icon bubble
+        let iconBubble = UIView()
+        iconBubble.backgroundColor = UIColor.systemYellow.withAlphaComponent(0.18)
+        iconBubble.layer.cornerRadius = 14
+        iconBubble.isUserInteractionEnabled = false
+        iconBubble.translatesAutoresizingMaskIntoConstraints = false
+        iconBubble.widthAnchor.constraint(equalToConstant: 48).isActive = true
+        iconBubble.heightAnchor.constraint(equalToConstant: 48).isActive = true
 
         let iconLabel = UILabel()
         iconLabel.text = "⚡"
-        iconLabel.font = UIFont.systemFont(ofSize: 28)
+        iconLabel.font = UIFont.systemFont(ofSize: 24)
+        iconLabel.textAlignment = .center
         iconLabel.isUserInteractionEnabled = false
+        iconLabel.translatesAutoresizingMaskIntoConstraints = false
+        iconBubble.addSubview(iconLabel)
+        NSLayoutConstraint.activate([
+            iconLabel.centerXAnchor.constraint(equalTo: iconBubble.centerXAnchor),
+            iconLabel.centerYAnchor.constraint(equalTo: iconBubble.centerYAnchor),
+        ])
 
         let titleLabel = UILabel()
         titleLabel.text = "Today's Challenge"
@@ -541,7 +603,7 @@ class HomeViewController: UIViewController {
         spinner.hidesWhenStopped = true
         spinner.tag = 42
 
-        let row = UIStackView(arrangedSubviews: [iconLabel, textStack, UIView(), spinner])
+        let row = UIStackView(arrangedSubviews: [iconBubble, textStack, UIView(), spinner])
         row.axis = .horizontal
         row.spacing = 12
         row.alignment = .center
@@ -561,6 +623,14 @@ class HomeViewController: UIViewController {
     }
 
     @objc private func dailyTapped() {
+        // Spring back
+        if let btn = dailyCardButton {
+            UIView.animate(
+                withDuration: 0.28, delay: 0,
+                usingSpringWithDamping: 0.68, initialSpringVelocity: 0.6,
+                options: .allowUserInteraction
+            ) { btn.transform = .identity }
+        }
         guard !isDailyLoading else { return }
         isDailyLoading = true
         dailyCardButton?.isEnabled = false
@@ -596,6 +666,13 @@ class HomeViewController: UIViewController {
     }
 
     @objc private func curatedTapped(_ sender: UIButton) {
+        // Spring back
+        UIView.animate(
+            withDuration: 0.28, delay: 0,
+            usingSpringWithDamping: 0.68, initialSpringVelocity: 0.6,
+            options: .allowUserInteraction
+        ) { sender.transform = .identity }
+
         guard curatedDecks.indices.contains(sender.tag) else { return }
         let item = curatedDecks[sender.tag]
 
@@ -611,6 +688,13 @@ class HomeViewController: UIViewController {
     }
 
     @objc private func categoryTapped(_ sender: UIButton) {
+        // Spring parent chip back
+        UIView.animate(
+            withDuration: 0.25, delay: 0,
+            usingSpringWithDamping: 0.70, initialSpringVelocity: 0.5,
+            options: .allowUserInteraction
+        ) { sender.superview?.transform = .identity }
+
         guard categoryDecks.indices.contains(sender.tag) else { return }
         let item = categoryDecks[sender.tag]
         let vc = ProblemsViewController(listTag: item.tag, title: item.title)

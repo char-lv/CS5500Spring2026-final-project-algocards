@@ -13,12 +13,26 @@ class ProblemsViewController: UIViewController {
     private let deckTitleText: String
     private let viewModel = ProblemsViewModel()
 
+    // Set when initialized from Profile (pre-fetched problems, no listTag lookup needed)
+    private var preloadedProblems: [ProblemListItem]?
+    private var overrideIcon: String?
+    private var overrideAccent: UIColor?
+
     init(listTag: String, title: String) {
         self.listTag = listTag
         self.deckTitleText = title
         super.init(nibName: nil, bundle: nil)
         self.title = title
     }
+
+    /// Init for Profile lists (Mastered / Liked) — skips Firestore fetch.
+    convenience init(preloadedProblems: [ProblemListItem], title: String, icon: String, accent: UIColor) {
+        self.init(listTag: "__preloaded__", title: title)
+        self.preloadedProblems = preloadedProblems
+        self.overrideIcon = icon
+        self.overrideAccent = accent
+    }
+
     required init?(coder: NSCoder) { fatalError() }
 
     private let progressView: UIView = {
@@ -115,7 +129,11 @@ class ProblemsViewController: UIViewController {
         configureDeckPresentation()
         bindViewModel()
 
-        viewModel.loadProblems(listTag: listTag)
+        if let preloaded = preloadedProblems {
+            viewModel.setPreloadedProblems(preloaded)
+        } else {
+            viewModel.loadProblems(listTag: listTag)
+        }
         viewModel.loadSolvedProblems()
     }
 
@@ -176,16 +194,18 @@ class ProblemsViewController: UIViewController {
     }
 
     private func configureDeckPresentation() {
-        let accentColor = ProblemDeckConfig.color(forListTag: listTag)
+        let accentColor = overrideAccent ?? ProblemDeckConfig.color(forListTag: listTag)
 
         progressView.backgroundColor = accentColor.withAlphaComponent(0.10)
         progressView.layer.borderWidth = 1
         progressView.layer.borderColor = accentColor.withAlphaComponent(0.18).cgColor
 
-        deckIconBadge.text = ProblemDeckConfig.icon(forListTag: listTag)
+        deckIconBadge.text = overrideIcon ?? ProblemDeckConfig.icon(forListTag: listTag)
         deckIconBadge.backgroundColor = accentColor.withAlphaComponent(0.16)
         deckTitleLabel.text = deckTitleText
-        deckDescriptionLabel.text = descriptionText(for: listTag, title: deckTitleText)
+        deckDescriptionLabel.text = preloadedProblems != nil
+            ? "Your saved \(deckTitleText.lowercased()) — filter by difficulty or search by title."
+            : descriptionText(for: listTag, title: deckTitleText)
         progressLabel.textColor = accentColor
         progressLabel.backgroundColor = UIColor.systemBackground.withAlphaComponent(0.82)
         searchBar.placeholder = searchPlaceholder(for: deckTitleText)

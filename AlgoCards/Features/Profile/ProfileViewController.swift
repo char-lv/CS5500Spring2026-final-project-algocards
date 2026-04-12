@@ -15,6 +15,7 @@ class ProfileViewController: UIViewController {
 
     private var masteredCountLabel: UILabel?
     private var likedCountLabel: UILabel?
+    private var hasAnimatedIn = false
 
     private let scrollView: UIScrollView = {
         let sv = UIScrollView()
@@ -104,6 +105,26 @@ class ProfileViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
         setupUI()
         loadUserData()
+        contentStack.arrangedSubviews.forEach { $0.alpha = 0 }
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !hasAnimatedIn else { return }
+        hasAnimatedIn = true
+        contentStack.arrangedSubviews.enumerated().forEach { index, v in
+            v.transform = CGAffineTransform(translationX: 0, y: 22)
+            UIView.animate(
+                withDuration: 0.50,
+                delay: Double(index) * 0.065,
+                usingSpringWithDamping: 0.84,
+                initialSpringVelocity: 0,
+                options: [.allowUserInteraction]
+            ) {
+                v.alpha = 1
+                v.transform = .identity
+            }
+        }
     }
 
     override func viewDidLayoutSubviews() {
@@ -294,6 +315,8 @@ class ProfileViewController: UIViewController {
         card.layer.shadowOffset = CGSize(width: 0, height: 2)
         card.layer.shadowRadius = 10
         card.translatesAutoresizingMaskIntoConstraints = false
+        card.addTarget(self, action: #selector(reviewCardDown(_:)), for: .touchDown)
+        card.addTarget(self, action: #selector(reviewCardUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         card.addTarget(self, action: action, for: .touchUpInside)
 
         // Icon bubble
@@ -427,13 +450,31 @@ class ProfileViewController: UIViewController {
 
     // MARK: - Actions
 
+    @objc private func reviewCardDown(_ sender: UIButton) {
+        UIView.animate(withDuration: 0.12) {
+            sender.transform = CGAffineTransform(scaleX: 0.97, y: 0.97)
+        }
+    }
+
+    @objc private func reviewCardUp(_ sender: UIButton) {
+        UIView.animate(
+            withDuration: 0.28, delay: 0,
+            usingSpringWithDamping: 0.68, initialSpringVelocity: 0.6,
+            options: .allowUserInteraction
+        ) {
+            sender.transform = .identity
+        }
+    }
+
     @objc private func masteredTapped() {
         guard !masteredIds.isEmpty else {
             showAlert(title: "Nothing here yet",
                       message: "Mark problems as solved to build your mastered list.")
             return
         }
-        openReview(ids: masteredIds, title: "Mastered")
+        openReview(ids: masteredIds, title: "Mastered",
+                   icon: "✅",
+                   accent: UIColor(red: 0.545, green: 0.686, blue: 0.545, alpha: 1.0))
     }
 
     @objc private func likedTapped() {
@@ -442,10 +483,12 @@ class ProfileViewController: UIViewController {
                       message: "Tap ♡ on any problem to save it to your liked list.")
             return
         }
-        openReview(ids: likedIds, title: "Liked")
+        openReview(ids: likedIds, title: "Liked",
+                   icon: "❤️",
+                   accent: UIColor(red: 0.482, green: 0.561, blue: 0.631, alpha: 1.0))
     }
 
-    private func openReview(ids: [String], title: String) {
+    private func openReview(ids: [String], title: String, icon: String, accent: UIColor) {
         let spinner = UIActivityIndicatorView(style: .medium)
         spinner.startAnimating()
         navigationItem.rightBarButtonItem = UIBarButtonItem(customView: spinner)
@@ -457,8 +500,12 @@ class ProfileViewController: UIViewController {
 
                 switch result {
                 case .success(let problems) where !problems.isEmpty:
-                    let vc = FlashCardViewController(problems: problems, currentIndex: 0)
-                    vc.title = title
+                    let vc = ProblemsViewController(
+                        preloadedProblems: problems,
+                        title: title,
+                        icon: icon,
+                        accent: accent
+                    )
                     self.navigationController?.pushViewController(vc, animated: true)
                 case .success:
                     self.showAlert(title: "No problems found",
