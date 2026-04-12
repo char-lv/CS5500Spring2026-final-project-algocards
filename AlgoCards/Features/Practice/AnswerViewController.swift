@@ -25,7 +25,7 @@ class AnswerViewController: UIViewController {
         let l = UILabel()
         l.font = UIFont.boldSystemFont(ofSize: 11)
         l.textAlignment = .center
-        l.layer.cornerRadius = 4
+        l.layer.cornerRadius = 8
         l.clipsToBounds = true
         l.translatesAutoresizingMaskIntoConstraints = false
         return l

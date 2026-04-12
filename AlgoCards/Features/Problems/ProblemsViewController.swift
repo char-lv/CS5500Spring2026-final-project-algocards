@@ -84,7 +84,7 @@ class ProblemsViewController: UIViewController {
     private let tableView: UITableView = {
         let tv = UITableView()
         tv.register(ProblemCell.self, forCellReuseIdentifier: ProblemCell.identifier)
-        tv.rowHeight = 62
+        tv.rowHeight = 68
         tv.separatorInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         tv.translatesAutoresizingMaskIntoConstraints = false
         return tv

@@ -34,7 +34,11 @@ class AuthViewController: UIViewController {
         tf.keyboardType = .emailAddress
         tf.autocapitalizationType = .none
         tf.autocorrectionType = .no
-        tf.borderStyle = .roundedRect
+        tf.borderStyle = .none
+        tf.backgroundColor = .systemGray6
+        tf.layer.cornerRadius = 14
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 48))
+        tf.leftViewMode = .always
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
@@ -43,7 +47,11 @@ class AuthViewController: UIViewController {
         let tf = UITextField()
         tf.placeholder = "Password"
         tf.isSecureTextEntry = true
-        tf.borderStyle = .roundedRect
+        tf.borderStyle = .none
+        tf.backgroundColor = .systemGray6
+        tf.layer.cornerRadius = 14
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 48))
+        tf.leftViewMode = .always
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
@@ -53,7 +61,11 @@ class AuthViewController: UIViewController {
         tf.placeholder = "Username (sign up only)"
         tf.autocapitalizationType = .none
         tf.autocorrectionType = .no
-        tf.borderStyle = .roundedRect
+        tf.borderStyle = .none
+        tf.backgroundColor = .systemGray6
+        tf.layer.cornerRadius = 14
+        tf.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 16, height: 48))
+        tf.leftViewMode = .always
         tf.translatesAutoresizingMaskIntoConstraints = false
         return tf
     }()
@@ -61,10 +73,10 @@ class AuthViewController: UIViewController {
     private let loginButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle("Log In", for: .normal)
-        b.backgroundColor = UIColor(red: 0.545, green: 0.686, blue: 0.545, alpha: 1) // muted green
+        b.backgroundColor = UIColor(red: 0.545, green: 0.686, blue: 0.545, alpha: 1)
         b.setTitleColor(.white, for: .normal)
         b.titleLabel?.font = .boldSystemFont(ofSize: 17)
-        b.layer.cornerRadius = 12
+        b.layer.cornerRadius = 14
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()
@@ -72,10 +84,10 @@ class AuthViewController: UIViewController {
     private let signUpButton: UIButton = {
         let b = UIButton(type: .system)
         b.setTitle("Sign Up", for: .normal)
-        b.backgroundColor = UIColor(red: 0.482, green: 0.561, blue: 0.631, alpha: 1) // slate blue #7B8FA1
+        b.backgroundColor = UIColor(red: 0.482, green: 0.561, blue: 0.631, alpha: 1)
         b.setTitleColor(.white, for: .normal)
         b.titleLabel?.font = .boldSystemFont(ofSize: 17)
-        b.layer.cornerRadius = 12
+        b.layer.cornerRadius = 14
         b.translatesAutoresizingMaskIntoConstraints = false
         return b
     }()

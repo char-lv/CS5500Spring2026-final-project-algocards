@@ -34,6 +34,7 @@ class HomeViewController: UIViewController {
 
     private var isDailyLoading = false
     private weak var dailyCardButton: UIButton?
+    private var hasAnimatedIn = false
 
     private let curatedGridContainer: UIStackView = {
         let stack = UIStackView()
@@ -42,11 +43,11 @@ class HomeViewController: UIViewController {
         return stack
     }()
 
-    private let categoryGridContainer: UIStackView = {
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 12
-        return stack
+    private let categoryScrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsHorizontalScrollIndicator = false
+        sv.showsVerticalScrollIndicator = false
+        return sv
     }()
 
     private let scrollView: UIScrollView = {
@@ -84,7 +85,7 @@ class HomeViewController: UIViewController {
     private let recommendationCard: UIView = {
         let v = UIView()
         v.backgroundColor = UIColor(red: 0.96, green: 0.98, blue: 1.0, alpha: 1.0)
-        v.layer.cornerRadius = 18
+        v.layer.cornerRadius = 16
         v.layer.borderWidth = 1
         v.layer.borderColor = UIColor.systemBlue.withAlphaComponent(0.15).cgColor
         v.translatesAutoresizingMaskIntoConstraints = false
@@ -164,17 +165,11 @@ class HomeViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        view.backgroundColor = .systemGroupedBackground
+        view.backgroundColor = .systemBackground
         navigationItem.title = ""
         print("[HomeViewController] Loaded — current UID: \(AuthService.shared.currentUserId ?? "nil")")
         setupUI()
 
-        navigationItem.rightBarButtonItem = UIBarButtonItem(
-            image: UIImage(systemName: "person.circle"),
-            style: .plain,
-            target: self,
-            action: #selector(profileTapped)
-        )
         navigationItem.leftBarButtonItem = UIBarButtonItem(
             image: UIImage(systemName: "trophy"),
             style: .plain,
@@ -194,18 +189,23 @@ class HomeViewController: UIViewController {
         )
         loadAvailableDecks()
         loadRecommendation()
+        subtitleLabel.text = makeGreeting()
+        contentStack.arrangedSubviews.forEach { $0.alpha = 0 }
     }
 
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
     }
 
-    @objc private func leaderboardTapped() {
-        navigationController?.pushViewController(LeaderboardViewController(), animated: true)
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        guard !hasAnimatedIn else { return }
+        hasAnimatedIn = true
+        animateSectionsIn()
     }
 
-    @objc private func profileTapped() {
-        navigationController?.pushViewController(ProfileViewController(), animated: true)
+    @objc private func leaderboardTapped() {
+        navigationController?.pushViewController(LeaderboardViewController(), animated: true)
     }
 
     @objc private func refreshRecommendationTapped() {
@@ -357,8 +357,12 @@ class HomeViewController: UIViewController {
         index: Int
     ) -> UIView {
         let card = UIButton(type: .system)
-        card.backgroundColor = item.color.withAlphaComponent(0.12)
+        card.backgroundColor = item.color.withAlphaComponent(0.10)
         card.layer.cornerRadius = 16
+        card.layer.shadowColor = UIColor.black.cgColor
+        card.layer.shadowOpacity = 0.06
+        card.layer.shadowOffset = CGSize(width: 0, height: 2)
+        card.layer.shadowRadius = 8
         card.tag = index
         card.addTarget(self, action: #selector(curatedTapped(_:)), for: .touchUpInside)
 
@@ -371,11 +375,11 @@ class HomeViewController: UIViewController {
 
         let iconLabel = UILabel()
         iconLabel.text = item.icon
-        iconLabel.font = UIFont.systemFont(ofSize: 32)
+        iconLabel.font = UIFont.systemFont(ofSize: 28)
 
         let titleLabel = UILabel()
         titleLabel.text = item.title
-        titleLabel.font = UIFont.boldSystemFont(ofSize: 16)
+        titleLabel.font = UIFont.boldSystemFont(ofSize: 15)
         titleLabel.textColor = item.color
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 2
@@ -393,78 +397,117 @@ class HomeViewController: UIViewController {
     }
 
     private func buildCategorySectionContent() -> UIView {
-        renderCategoryGrid()
-        return categoryGridContainer
+        categoryScrollView.translatesAutoresizingMaskIntoConstraints = false
+        categoryScrollView.heightAnchor.constraint(equalToConstant: 90).isActive = true
+        renderCategoryChips()
+        return categoryScrollView
     }
 
-    private func renderCategoryGrid() {
-        clearArrangedSubviews(in: categoryGridContainer)
+    private func renderCategoryChips() {
+        categoryScrollView.subviews.forEach { $0.removeFromSuperview() }
 
-        let outerStack = UIStackView()
-        outerStack.axis = .vertical
-        outerStack.spacing = 12
+        let contentView = UIView()
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        categoryScrollView.addSubview(contentView)
 
-        categoryDecks.chunked(into: 2).enumerated().forEach { rowIndex, row in
-            let rowStack = UIStackView()
-            rowStack.axis = .horizontal
-            rowStack.spacing = 12
-            rowStack.distribution = .fillEqually
+        NSLayoutConstraint.activate([
+            contentView.topAnchor.constraint(equalTo: categoryScrollView.contentLayoutGuide.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: categoryScrollView.contentLayoutGuide.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: categoryScrollView.contentLayoutGuide.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: categoryScrollView.contentLayoutGuide.bottomAnchor),
+            contentView.heightAnchor.constraint(equalTo: categoryScrollView.frameLayoutGuide.heightAnchor),
+        ])
 
-            row.enumerated().forEach { offset, item in
-                let absoluteIndex = (rowIndex * 2) + offset
-                let card = makeCategoryCard(item, index: absoluteIndex)
-                rowStack.addArrangedSubview(card)
+        let row1 = UIStackView()
+        row1.axis = .horizontal
+        row1.spacing = 8
+        row1.translatesAutoresizingMaskIntoConstraints = false
+
+        let row2 = UIStackView()
+        row2.axis = .horizontal
+        row2.spacing = 8
+        row2.translatesAutoresizingMaskIntoConstraints = false
+
+        categoryDecks.enumerated().forEach { index, item in
+            let chip = makeCategoryChip(item, index: index)
+            if index % 2 == 0 {
+                row1.addArrangedSubview(chip)
+            } else {
+                row2.addArrangedSubview(chip)
             }
-
-            if row.count == 1 {
-                rowStack.addArrangedSubview(UIView())
-            }
-
-            outerStack.addArrangedSubview(rowStack)
         }
 
-        categoryGridContainer.addArrangedSubview(outerStack)
+        // Spacers absorb leftover horizontal space so chips stay at natural width
+        let spacer1 = UIView()
+        spacer1.setContentHuggingPriority(.fittingSizeLevel, for: .horizontal)
+        row1.addArrangedSubview(spacer1)
+        let spacer2 = UIView()
+        spacer2.setContentHuggingPriority(.fittingSizeLevel, for: .horizontal)
+        row2.addArrangedSubview(spacer2)
+
+        let outerStack = UIStackView(arrangedSubviews: [row1, row2])
+        outerStack.axis = .vertical
+        outerStack.spacing = 10
+        outerStack.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(outerStack)
+
+        NSLayoutConstraint.activate([
+            outerStack.topAnchor.constraint(equalTo: contentView.topAnchor),
+            outerStack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            outerStack.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            outerStack.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+        ])
     }
 
-    private func makeCategoryCard(_ item: DeckCardItem, index: Int) -> UIView {
-        let card = UIButton(type: .system)
-        card.backgroundColor = .systemBackground
-        card.layer.cornerRadius = 16
-        card.layer.shadowColor = UIColor.black.cgColor
-        card.layer.shadowOpacity = 0.06
-        card.layer.shadowOffset = CGSize(width: 0, height: 2)
-        card.layer.shadowRadius = 8
-        card.tag = index
-        card.addTarget(self, action: #selector(categoryTapped(_:)), for: .touchUpInside)
-
-        let stack = UIStackView()
-        stack.axis = .vertical
-        stack.spacing = 6
-        stack.alignment = .center
-        stack.isUserInteractionEnabled = false
-        stack.translatesAutoresizingMaskIntoConstraints = false
+    private func makeCategoryChip(_ item: DeckCardItem, index: Int) -> UIView {
+        // Use UIView as container so systemLayoutSizeFitting returns the correct
+        // content-driven width (UIButton with no title reports 0 intrinsic width).
+        let chip = UIView()
+        chip.backgroundColor = item.color.withAlphaComponent(0.10)
+        chip.layer.cornerRadius = 20
+        chip.layer.borderWidth = 1
+        chip.layer.borderColor = item.color.withAlphaComponent(0.30).cgColor
+        chip.translatesAutoresizingMaskIntoConstraints = false
 
         let iconLabel = UILabel()
         iconLabel.text = item.icon
-        iconLabel.font = UIFont.systemFont(ofSize: 28)
+        iconLabel.font = UIFont.systemFont(ofSize: 15)
+        iconLabel.isUserInteractionEnabled = false
 
         let titleLabel = UILabel()
         titleLabel.text = item.title
         titleLabel.font = UIFont.boldSystemFont(ofSize: 13)
-        titleLabel.textColor = .label
-        titleLabel.textAlignment = .center
-        titleLabel.numberOfLines = 2
+        titleLabel.textColor = item.color
+        titleLabel.isUserInteractionEnabled = false
 
-        stack.addArrangedSubview(iconLabel)
-        stack.addArrangedSubview(titleLabel)
+        let row = UIStackView(arrangedSubviews: [iconLabel, titleLabel])
+        row.axis = .horizontal
+        row.spacing = 5
+        row.alignment = .center
+        row.isUserInteractionEnabled = false
+        row.translatesAutoresizingMaskIntoConstraints = false
+        chip.addSubview(row)
 
-        card.addSubview(stack)
+        // Transparent button overlay handles taps without disrupting size calculation
+        let btn = UIButton(type: .system)
+        btn.tag = index
+        btn.addTarget(self, action: #selector(categoryTapped(_:)), for: .touchUpInside)
+        btn.translatesAutoresizingMaskIntoConstraints = false
+        chip.addSubview(btn)
+
         NSLayoutConstraint.activate([
-            card.heightAnchor.constraint(equalToConstant: 90),
-            stack.centerXAnchor.constraint(equalTo: card.centerXAnchor),
-            stack.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            chip.heightAnchor.constraint(equalToConstant: 40),
+
+            row.leadingAnchor.constraint(equalTo: chip.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: chip.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: chip.centerYAnchor),
+
+            btn.topAnchor.constraint(equalTo: chip.topAnchor),
+            btn.leadingAnchor.constraint(equalTo: chip.leadingAnchor),
+            btn.trailingAnchor.constraint(equalTo: chip.trailingAnchor),
+            btn.bottomAnchor.constraint(equalTo: chip.bottomAnchor),
         ])
-        return card
+        return chip
     }
 
     // MARK: - Daily Challenge
@@ -592,7 +635,7 @@ class HomeViewController: UIViewController {
                         : refreshedCategoryDecks
 
                     self.renderCuratedGrid()
-                    self.renderCategoryGrid()
+                    self.renderCategoryChips()
                 case .failure(let error):
                     print("[HomeViewController] Failed to load available list tags: \(error.localizedDescription)")
                 }
@@ -719,6 +762,34 @@ class HomeViewController: UIViewController {
         recommendationReasonLabel.text = message
         recommendationActionButton.isHidden = true
         recommendationRetryButton.isHidden = false
+    }
+
+    // MARK: - Entrance Animation
+
+    private func animateSectionsIn() {
+        contentStack.arrangedSubviews.enumerated().forEach { index, sectionView in
+            sectionView.transform = CGAffineTransform(translationX: 0, y: 18)
+            UIView.animate(
+                withDuration: 0.52,
+                delay: Double(index) * 0.08,
+                usingSpringWithDamping: 0.86,
+                initialSpringVelocity: 0.2,
+                options: [.allowUserInteraction],
+                animations: {
+                    sectionView.alpha = 1
+                    sectionView.transform = .identity
+                }
+            )
+        }
+    }
+
+    private func makeGreeting() -> String {
+        let hour = Calendar.current.component(.hour, from: Date())
+        switch hour {
+        case 5..<12: return "Good morning — pick a deck or try your next question"
+        case 12..<17: return "Good afternoon — pick a deck or try your next question"
+        default:     return "Good evening — pick a deck or try your next question"
+        }
     }
 }
 

@@ -184,10 +184,13 @@ class FlashCardViewController: UIViewController {
 
     private let prevButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("◀  Prev", for: .normal)
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        btn.setImage(UIImage(systemName: "chevron.left", withConfiguration: symbolConfig), for: .normal)
+        btn.setTitle("  Prev", for: .normal)
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         btn.setTitleColor(.label, for: .normal)
         btn.setTitleColor(.tertiaryLabel, for: .disabled)
+        btn.tintColor = .secondaryLabel
         btn.backgroundColor = .systemGray6
         btn.layer.cornerRadius = 12
         btn.translatesAutoresizingMaskIntoConstraints = false
@@ -196,10 +199,14 @@ class FlashCardViewController: UIViewController {
 
     private let nextButton: UIButton = {
         let btn = UIButton(type: .system)
-        btn.setTitle("Next  ▶", for: .normal)
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: 12, weight: .semibold)
+        btn.setImage(UIImage(systemName: "chevron.right", withConfiguration: symbolConfig), for: .normal)
+        btn.setTitle("Next  ", for: .normal)
+        btn.semanticContentAttribute = .forceRightToLeft
         btn.titleLabel?.font = UIFont.systemFont(ofSize: 15, weight: .medium)
         btn.setTitleColor(.label, for: .normal)
         btn.setTitleColor(.tertiaryLabel, for: .disabled)
+        btn.tintColor = .secondaryLabel
         btn.backgroundColor = .systemGray6
         btn.layer.cornerRadius = 12
         btn.translatesAutoresizingMaskIntoConstraints = false
@@ -340,7 +347,7 @@ class FlashCardViewController: UIViewController {
 
             frontBadgeLabel.topAnchor.constraint(equalTo: frontView.topAnchor, constant: 20),
             frontBadgeLabel.leadingAnchor.constraint(equalTo: frontView.leadingAnchor, constant: 20),
-            frontBadgeLabel.widthAnchor.constraint(equalToConstant: 70),
+            frontBadgeLabel.widthAnchor.constraint(equalToConstant: 74),
             frontBadgeLabel.heightAnchor.constraint(equalToConstant: 24),
 
             frontTitleLabel.topAnchor.constraint(equalTo: frontBadgeLabel.bottomAnchor, constant: 10),
@@ -388,17 +395,17 @@ class FlashCardViewController: UIViewController {
             navButtonStack.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             navButtonStack.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             navButtonStack.bottomAnchor.constraint(equalTo: answerButton.topAnchor, constant: -10),
-            navButtonStack.heightAnchor.constraint(equalToConstant: 44),
+            navButtonStack.heightAnchor.constraint(equalToConstant: 46),
 
             answerButton.bottomAnchor.constraint(equalTo: leetcodeButton.topAnchor, constant: -10),
             answerButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             answerButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            answerButton.heightAnchor.constraint(equalToConstant: 52),
+            answerButton.heightAnchor.constraint(equalToConstant: 50),
 
             leetcodeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             leetcodeButton.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             leetcodeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
-            leetcodeButton.heightAnchor.constraint(equalToConstant: 48),
+            leetcodeButton.heightAnchor.constraint(equalToConstant: 50),
         ])
 
         configureDifficultyBadge()
@@ -447,17 +454,20 @@ class FlashCardViewController: UIViewController {
         frontTitleLabel.text = problem.title
         switch problem.difficulty {
         case .easy:
+            let c = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
             frontBadgeLabel.text = "Easy"
-            frontBadgeLabel.textColor = .systemGreen
-            frontBadgeLabel.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
+            frontBadgeLabel.textColor = c
+            frontBadgeLabel.backgroundColor = c.withAlphaComponent(0.15)
         case .medium:
+            let c = UIColor(red: 196/255, green: 168/255, blue: 130/255, alpha: 1.0)
             frontBadgeLabel.text = "Medium"
-            frontBadgeLabel.textColor = .systemOrange
-            frontBadgeLabel.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.15)
+            frontBadgeLabel.textColor = c
+            frontBadgeLabel.backgroundColor = c.withAlphaComponent(0.15)
         case .hard:
+            let c = UIColor(red: 176/255, green: 138/255, blue: 138/255, alpha: 1.0)
             frontBadgeLabel.text = "Hard"
-            frontBadgeLabel.textColor = .systemRed
-            frontBadgeLabel.backgroundColor = UIColor.systemRed.withAlphaComponent(0.15)
+            frontBadgeLabel.textColor = c
+            frontBadgeLabel.backgroundColor = c.withAlphaComponent(0.15)
         }
     }
 
