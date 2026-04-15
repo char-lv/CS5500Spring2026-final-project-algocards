@@ -391,16 +391,6 @@ class FirestoreService {
     }
 
     // Submissions
-    func saveSubmission(_ answer: Answer, completion: @escaping (Error?) -> Void) {
-        do {
-            _ = try submissionsRef.addDocument(from: answer) { error in
-                completion(error)
-            }
-        } catch {
-            completion(error)
-        }
-    }
-
     func fetchSubmissions(
         userId: String,
         completion: @escaping (Result<[Answer], Error>) -> Void
