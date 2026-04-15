@@ -180,6 +180,27 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Progress UI
+
+    private let progressBar: UIProgressView = {
+        let pv = UIProgressView(progressViewStyle: .default)
+        pv.progressTintColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+        pv.trackTintColor = .systemGray5
+        pv.layer.cornerRadius = 2
+        pv.clipsToBounds = true
+        pv.translatesAutoresizingMaskIntoConstraints = false
+        return pv
+    }()
+
+    private let progressLabel: UILabel = {
+        let l = UILabel()
+        l.font = UIFont.monospacedDigitSystemFont(ofSize: 12, weight: .regular)
+        l.textColor = .secondaryLabel
+        l.textAlignment = .right
+        l.translatesAutoresizingMaskIntoConstraints = false
+        return l
+    }()
+
     // MARK: - Deck Navigation Buttons
 
     private let prevButton: UIButton = {
@@ -263,29 +284,32 @@ class FlashCardViewController: UIViewController {
         view.backgroundColor = .systemGroupedBackground
         title = problem.title
         setupUI()
-        // Show the default session duration immediately so the label is never blank.
-        remainingSeconds = FlashCardViewController.timerDuration
-        updateTimerDisplay()
+        updateProgress()
         setupGestures()
         setupNavigationBar()
         setupLikeButton()
         updateNavButtons()
         loadLikedProblemIds()
         fetchContent(token: loadToken)
+        // Start the session timer once when the study session is created.
+        // Keeping this in viewDidLoad (not viewDidAppear) ensures it does not
+        // reset when the user returns from a child screen such as AnswerViewController.
+        startTimer()
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         becomeFirstResponder()
-        // V1: timer always restarts from the full duration whenever this VC appears.
-        startTimer()
+        resumeTimer()
     }
 
     // MARK: - Layout
 
     private func setupUI() {
-        // Timer label sits between the navigation bar and the card container.
+        // Timer label and progress row sit between the navigation bar and the card container.
         view.addSubview(timerLabel)
+        view.addSubview(progressBar)
+        view.addSubview(progressLabel)
 
         view.addSubview(cardContainer)
         cardContainer.addSubview(frontView)
@@ -324,8 +348,19 @@ class FlashCardViewController: UIViewController {
             timerLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             timerLabel.heightAnchor.constraint(equalToConstant: 28),
 
-            // Card container's top attaches to the timer label so it is always properly spaced.
-            cardContainer.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 4),
+            // Progress row: label on the right (fixed width to fit "150 / 150"),
+            // bar stretches to fill the remaining leading space.
+            progressLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            progressLabel.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 8),
+            progressLabel.widthAnchor.constraint(equalToConstant: 64),
+
+            progressBar.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            progressBar.trailingAnchor.constraint(equalTo: progressLabel.leadingAnchor, constant: -10),
+            progressBar.centerYAnchor.constraint(equalTo: progressLabel.centerYAnchor),
+            progressBar.heightAnchor.constraint(equalToConstant: 4),
+
+            // Card container attaches below the progress row.
+            cardContainer.topAnchor.constraint(equalTo: progressLabel.bottomAnchor, constant: 10),
             cardContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             cardContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             cardContainer.bottomAnchor.constraint(equalTo: navButtonStack.topAnchor, constant: -16),
@@ -478,6 +513,14 @@ class FlashCardViewController: UIViewController {
         nextButton.isEnabled = currentIndex < problems.count - 1
     }
 
+    private func updateProgress() {
+        guard !problems.isEmpty else { return }
+        let current = currentIndex + 1
+        let total   = problems.count
+        progressBar.setProgress(Float(current) / Float(total), animated: true)
+        progressLabel.text = "\(current) / \(total)"
+    }
+
     @objc private func prevTapped() {
         guard currentIndex > 0 else { return }
         currentIndex -= 1
@@ -502,9 +545,10 @@ class FlashCardViewController: UIViewController {
         frontScrollView.setContentOffset(.zero, animated: false)
         backScrollView.setContentOffset(.zero, animated: false)
 
-        // Sync both action buttons from in-memory caches — no Firestore reads needed.
+        // Sync both action buttons and progress from in-memory state — no Firestore reads needed.
         updateSolvedButton()
         updateLikeButton()
+        updateProgress()
 
         let token = UUID()
         loadToken = token
@@ -649,7 +693,7 @@ class FlashCardViewController: UIViewController {
         UIView.transition(
             from: fromView,
             to: toView,
-            duration: 0.5,
+            duration: 0.3,
             options: [.transitionFlipFromRight, .showHideTransitionViews]
         )
         isFlipped.toggle()
@@ -751,6 +795,22 @@ class FlashCardViewController: UIViewController {
         stopTimer()  // Invalidates any existing timer before creating a new one, preventing duplicates.
         remainingSeconds = FlashCardViewController.timerDuration
         updateTimerDisplay()
+        countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            guard let self else { return }
+            self.remainingSeconds -= 1
+            self.updateTimerDisplay()
+            if self.remainingSeconds <= 0 {
+                self.handleTimerExpired()
+            }
+        }
+    }
+
+    /// Resumes the countdown tick from the current remainingSeconds without resetting it.
+    /// Called from viewDidAppear so the timer continues whenever this screen is visible,
+    /// and naturally pauses (via viewWillDisappear → stopTimer) when a child screen is pushed.
+    /// Guards ensure this is a no-op if the timer is already running or has already expired.
+    private func resumeTimer() {
+        guard remainingSeconds > 0, countdownTimer == nil else { return }
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self else { return }
             self.remainingSeconds -= 1
