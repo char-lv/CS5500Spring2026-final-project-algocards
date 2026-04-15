@@ -705,6 +705,16 @@ private final class AIRecommendationClient {
 
     private let config: AIRecommendationConfig
 
+    /// Dedicated session with a 5-second request timeout (NFR-10).
+    /// Using a private session instead of URLSession.shared ensures the timeout
+    /// applies only to AI calls and does not affect other URLSession users.
+    private let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest  = 5.0   // NFR-10: 3-5 s max
+        config.timeoutIntervalForResource = 5.0
+        return URLSession(configuration: config)
+    }()
+
     init(config: AIRecommendationConfig) {
         self.config = config
     }
@@ -742,7 +752,7 @@ private final class AIRecommendationClient {
             return
         }
 
-        URLSession.shared.dataTask(with: request) { data, _, error in
+        session.dataTask(with: request) { data, _, error in
             if let error = error {
                 completion(.failure(error))
                 return
