@@ -15,6 +15,9 @@ class FlashCardViewController: UIViewController {
     private var currentIndex: Int
     /// Guards against stale network responses when the user navigates before a fetch completes.
     private var loadToken = UUID()
+    /// True after the first viewDidAppear fires. Prevents the help dialog and startTimer()
+    /// from being re-triggered when returning from a child screen (e.g. AnswerViewController).
+    private var hasAppearedOnce = false
 
     private var problem: ProblemListItem { problems[currentIndex] }
 
@@ -314,16 +317,21 @@ class FlashCardViewController: UIViewController {
         updateNavButtons()
         loadLikedProblemIds()
         fetchContent(token: loadToken)
-        // Start the session timer once when the study session is created.
-        // Keeping this in viewDidLoad (not viewDidAppear) ensures it does not
-        // reset when the user returns from a child screen such as AnswerViewController.
-        startTimer()
+        // Timer start and help dialog are deferred to viewDidAppear so that
+        // the view is fully on-screen before any presentation or timer logic runs.
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         becomeFirstResponder()
-        resumeTimer()
+        if !hasAppearedOnce {
+            hasAppearedOnce = true
+            // First appearance: show help (which also triggers startTimer at the right moment).
+            showHelpIfNeeded()
+        } else {
+            // Subsequent appearances (returning from child screen): resume the existing timer.
+            resumeTimer()
+        }
     }
 
     // MARK: - Layout
@@ -912,6 +920,36 @@ class FlashCardViewController: UIViewController {
         stopTimer()
         timerLabel.text = "⏱ 00:00"
         showAlert(title: "⏰ Time's Up!", message: "Your study session has ended.")
+    }
+
+    // MARK: - Help Dialog
+
+    private static let helpSeenKey = "hasSeenFlashCardHelp"
+
+    /// Shows a one-time usage guide the first time the user opens a study session.
+    /// After the user taps "Got it", the flag is written to UserDefaults and the alert
+    /// never appears again — even across app restarts.
+    private func showHelpIfNeeded() {
+        if UserDefaults.standard.bool(forKey: Self.helpSeenKey) {
+            // Returning user: start the session timer immediately, no dialog needed.
+            startTimer()
+            return
+        }
+        // First-time user: show the help dialog. The timer starts only after
+        // "Got it" is tapped so no session time is lost while reading.
+        let body = """
+            • Tap the card to flip between question and solution
+            • Shake your phone to flip
+            • 💡 Hints reveal step-by-step clues
+            • ✓ Mark a problem solved when you're ready
+            • Timer counts down your 10-minute session
+            """
+        let alert = UIAlertController(title: "How to Use Flash Cards", message: body, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default) { [weak self] _ in
+            UserDefaults.standard.set(true, forKey: Self.helpSeenKey)
+            self?.startTimer()
+        })
+        present(alert, animated: true)
     }
 
     // MARK: - Helpers
