@@ -642,21 +642,45 @@ class FlashCardViewController: UIViewController {
     // MARK: - Like
 
     private func setupLikeButton() {
-        let btn = UIBarButtonItem(
+        let heartBtn = UIBarButtonItem(
             image: UIImage(systemName: "heart"),
             style: .plain,
             target: self,
             action: #selector(likeTapped)
         )
-        btn.tintColor = .systemRed
-        navigationItem.leftBarButtonItem = btn
-        // Keep the system back button visible alongside the heart icon.
-        navigationItem.leftItemsSupplementBackButton = true
+        heartBtn.tintColor = .systemRed
+
+        // Custom back button so we can intercept the tap and show a confirmation
+        // dialog before popping. hidesBackButton suppresses the auto-generated item.
+        let backBtn = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
+        )
+        backBtn.tintColor = .label
+
+        navigationItem.hidesBackButton = true
+        navigationItem.leftBarButtonItems = [backBtn, heartBtn]
+    }
+
+    @objc private func backTapped() {
+        let alert = UIAlertController(
+            title: "Exit Study Session?",
+            message: "Your timer progress will be lost if you leave now.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Continue Studying", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Exit", style: .destructive) { [weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     private func updateLikeButton() {
         let isLiked = likedProblemIds.contains(problem.id)
-        navigationItem.leftBarButtonItem?.image = UIImage(
+        // leftBarButtonItems = [backBtn, heartBtn] — heart is at index 1.
+        navigationItem.leftBarButtonItems?[1].image = UIImage(
             systemName: isLiked ? "heart.fill" : "heart"
         )
     }
