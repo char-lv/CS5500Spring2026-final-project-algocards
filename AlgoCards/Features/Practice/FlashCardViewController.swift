@@ -899,19 +899,39 @@ class FlashCardViewController: UIViewController {
         let total = hints.count
         let nextLevel = hintLevel + 1
 
-        let title: String
-        let message: String
-        if nextLevel <= total {
-            title = "Hint \(nextLevel) / \(total)"
-            message = hints[nextLevel - 1]
-            hintLevel = nextLevel
-        } else {
-            title = "No More Hints"
-            message = "You've already seen all \(total) hints for this problem."
+        // All hints already seen — nothing more to reveal.
+        guard nextLevel <= total else {
+            let alert = UIAlertController(
+                title: "No More Hints",
+                message: "You've already seen all \(total) hints for this problem.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
         }
 
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        // Advance the level now so both dismiss paths (OK and "I Got It!") leave
+        // hintLevel in a consistent state — at least nextLevel has been revealed.
+        hintLevel = nextLevel
+
+        let alert = UIAlertController(
+            title: "Hint \(nextLevel) / \(total)",
+            message: hints[nextLevel - 1],
+            preferredStyle: .alert
+        )
+
+        // "OK" — dismiss and keep the door open for the next hint level.
+        alert.addAction(UIAlertAction(title: "OK", style: .cancel))
+
+        // "I Got It!" — FR-12: skip any remaining hint levels for this problem.
+        // Only shown when at least one more level exists after this one.
+        if nextLevel < total {
+            alert.addAction(UIAlertAction(title: "I Got It! ✓", style: .default) { [weak self] in
+                self?.hintLevel = total
+            })
+        }
+
         present(alert, animated: true)
     }
 
