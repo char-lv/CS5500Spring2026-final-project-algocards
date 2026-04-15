@@ -19,6 +19,13 @@ class ProblemsViewModel {
     var onProblemsUpdated: (() -> Void)?
     var onError: ((String) -> Void)?
 
+    // Inject pre-fetched problems (used by Profile review lists)
+    func setPreloadedProblems(_ problems: [ProblemListItem]) {
+        isLoading = false
+        allProblems = problems
+        applyDifficultyFilter(nil)
+    }
+
     // Fetch from database
     func loadProblems(listTag: String, difficulty: DifficultyFilter? = nil) {
         selectedDifficulty = difficulty

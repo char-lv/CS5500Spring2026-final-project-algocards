@@ -39,7 +39,7 @@ class ProblemCell: UITableViewCell {
         let l = UILabel()
         l.font = UIFont.boldSystemFont(ofSize: 11)
         l.textAlignment = .center
-        l.layer.cornerRadius = 4
+        l.layer.cornerRadius = 8
         l.clipsToBounds = true
         l.translatesAutoresizingMaskIntoConstraints = false
         return l
@@ -90,7 +90,7 @@ class ProblemCell: UITableViewCell {
 
             difficultyBadge.trailingAnchor.constraint(equalTo: checkmark.leadingAnchor, constant: -8),
             difficultyBadge.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
-            difficultyBadge.widthAnchor.constraint(equalToConstant: 58),
+            difficultyBadge.widthAnchor.constraint(equalToConstant: 62),
             difficultyBadge.heightAnchor.constraint(equalToConstant: 22),
 
             checkmark.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
@@ -116,20 +116,23 @@ class ProblemCell: UITableViewCell {
 
         switch problem.difficulty {
         case .easy:
+            let easyColor = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
             difficultyBadge.text = "Easy"
-            difficultyBadge.textColor = .systemGreen
-            difficultyBadge.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.15)
-            difficultyBar.backgroundColor = .systemGreen
+            difficultyBadge.textColor = easyColor
+            difficultyBadge.backgroundColor = easyColor.withAlphaComponent(0.15)
+            difficultyBar.backgroundColor = easyColor
         case .medium:
+            let medColor = UIColor(red: 196/255, green: 168/255, blue: 130/255, alpha: 1.0)
             difficultyBadge.text = "Medium"
-            difficultyBadge.textColor = .systemOrange
-            difficultyBadge.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.15)
-            difficultyBar.backgroundColor = .systemOrange
+            difficultyBadge.textColor = medColor
+            difficultyBadge.backgroundColor = medColor.withAlphaComponent(0.15)
+            difficultyBar.backgroundColor = medColor
         case .hard:
+            let hardColor = UIColor(red: 176/255, green: 138/255, blue: 138/255, alpha: 1.0)
             difficultyBadge.text = "Hard"
-            difficultyBadge.textColor = .systemRed
-            difficultyBadge.backgroundColor = UIColor.systemRed.withAlphaComponent(0.15)
-            difficultyBar.backgroundColor = .systemRed
+            difficultyBadge.textColor = hardColor
+            difficultyBadge.backgroundColor = hardColor.withAlphaComponent(0.15)
+            difficultyBar.backgroundColor = hardColor
         }
     }
 

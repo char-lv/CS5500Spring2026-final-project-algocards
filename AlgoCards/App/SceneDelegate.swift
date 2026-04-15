@@ -41,9 +41,42 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func showMainApp() {
+        let tabBarVC = UITabBarController()
+
         let homeVC = HomeViewController()
-        let nav = UINavigationController(rootViewController: homeVC)
-        setRoot(nav)
+        let homeNav = UINavigationController(rootViewController: homeVC)
+        homeNav.tabBarItem = UITabBarItem(
+            title: "Home",
+            image: UIImage(systemName: "house"),
+            selectedImage: UIImage(systemName: "house.fill")
+        )
+
+        let socialVC = SocialViewController()
+        let socialNav = UINavigationController(rootViewController: socialVC)
+        socialNav.tabBarItem = UITabBarItem(
+            title: "Social",
+            image: UIImage(systemName: "person.2"),
+            selectedImage: UIImage(systemName: "person.2.fill")
+        )
+
+        let profileVC = ProfileViewController()
+        let profileNav = UINavigationController(rootViewController: profileVC)
+        profileNav.tabBarItem = UITabBarItem(
+            title: "Profile",
+            image: UIImage(systemName: "person.circle"),
+            selectedImage: UIImage(systemName: "person.circle.fill")
+        )
+
+        tabBarVC.viewControllers = [homeNav, socialNav, profileNav]
+
+        let appearance = UITabBarAppearance()
+        appearance.configureWithOpaqueBackground()
+        let tint = UIColor(red: 139/255, green: 175/255, blue: 139/255, alpha: 1.0)
+        tabBarVC.tabBar.tintColor = tint
+        tabBarVC.tabBar.standardAppearance = appearance
+        tabBarVC.tabBar.scrollEdgeAppearance = appearance
+
+        setRoot(tabBarVC)
     }
 
     private func setRoot(_ vc: UIViewController) {
