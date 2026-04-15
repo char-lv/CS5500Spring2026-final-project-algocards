@@ -514,9 +514,17 @@ class FlashCardViewController: UIViewController {
         // Store a direct reference so hintTapped() can enable/disable it without index access.
         hintBarButton = hintNavButton
 
-        // [0] = solvedButton (rightmost), [1] = hintNavButton (to its left).
+        let listButton = UIBarButtonItem(
+            image: UIImage(systemName: "list.bullet"),
+            style: .plain,
+            target: self,
+            action: #selector(listTapped)
+        )
+        listButton.tintColor = .systemIndigo
+
+        // [0] = solvedButton (rightmost), [1] = hintNavButton, [2] = listButton (leftmost).
         // updateSolvedButton() targets index 0; keep this order in sync if buttons change.
-        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton]
+        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton, listButton]
         updateSolvedButton()
     }
 
@@ -842,6 +850,25 @@ class FlashCardViewController: UIViewController {
     @objc private func onAnswerTapped() {
         let answerVC = AnswerViewController(problem: problem)
         navigationController?.pushViewController(answerVC, animated: true)
+    }
+
+    @objc private func listTapped() {
+        let picker = ProblemListPickerViewController(
+            problems: problems,
+            currentIndex: currentIndex,
+            solvedProblemIds: solvedProblemIds
+        ) { [weak self] selectedIndex in
+            guard let self else { return }
+            self.currentIndex = selectedIndex
+            self.loadCurrentProblem()
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
     }
 
     // MARK: - Hints
