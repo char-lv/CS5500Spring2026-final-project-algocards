@@ -15,6 +15,9 @@ class FlashCardViewController: UIViewController {
     private var currentIndex: Int
     /// Guards against stale network responses when the user navigates before a fetch completes.
     private var loadToken = UUID()
+    /// True after the first viewDidAppear fires. Prevents the help dialog and startTimer()
+    /// from being re-triggered when returning from a child screen (e.g. AnswerViewController).
+    private var hasAppearedOnce = false
 
     private var problem: ProblemListItem { problems[currentIndex] }
 
@@ -169,6 +172,28 @@ class FlashCardViewController: UIViewController {
         return l
     }()
 
+    // MARK: - Tag Chips UI
+
+    private let tagScrollView: UIScrollView = {
+        let sv = UIScrollView()
+        sv.showsHorizontalScrollIndicator = false
+        sv.showsVerticalScrollIndicator = false
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
+    private let tagStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .horizontal
+        sv.spacing = 8
+        sv.alignment = .center
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
+    }()
+
+    /// Stored so updateTagChips() can collapse the row to 0 when a problem has no topic tags.
+    private var tagScrollViewHeightConstraint: NSLayoutConstraint?
+
     // MARK: - Timer UI
 
     private let timerLabel: UILabel = {
@@ -285,22 +310,28 @@ class FlashCardViewController: UIViewController {
         title = problem.title
         setupUI()
         updateProgress()
+        updateTagChips()
         setupGestures()
         setupNavigationBar()
         setupLikeButton()
         updateNavButtons()
         loadLikedProblemIds()
         fetchContent(token: loadToken)
-        // Start the session timer once when the study session is created.
-        // Keeping this in viewDidLoad (not viewDidAppear) ensures it does not
-        // reset when the user returns from a child screen such as AnswerViewController.
-        startTimer()
+        // Timer start and help dialog are deferred to viewDidAppear so that
+        // the view is fully on-screen before any presentation or timer logic runs.
     }
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         becomeFirstResponder()
-        resumeTimer()
+        if !hasAppearedOnce {
+            hasAppearedOnce = true
+            // First appearance: show help (which also triggers startTimer at the right moment).
+            showHelpIfNeeded()
+        } else {
+            // Subsequent appearances (returning from child screen): resume the existing timer.
+            resumeTimer()
+        }
     }
 
     // MARK: - Layout
@@ -318,6 +349,8 @@ class FlashCardViewController: UIViewController {
 
         frontView.addSubview(frontBadgeLabel)
         frontView.addSubview(frontTitleLabel)
+        frontView.addSubview(tagScrollView)
+        tagScrollView.addSubview(tagStack)
         frontView.addSubview(frontScrollView)
         frontScrollView.addSubview(frontDescriptionLabel)
         frontView.addSubview(frontHintLabel)
@@ -389,7 +422,23 @@ class FlashCardViewController: UIViewController {
             frontTitleLabel.leadingAnchor.constraint(equalTo: frontView.leadingAnchor, constant: 20),
             frontTitleLabel.trailingAnchor.constraint(equalTo: frontView.trailingAnchor, constant: -20),
 
-            frontScrollView.topAnchor.constraint(equalTo: frontTitleLabel.bottomAnchor, constant: 12),
+            // Tag chip row: horizontally scrollable, fixed height, sits between title and description.
+            tagScrollView.topAnchor.constraint(equalTo: frontTitleLabel.bottomAnchor, constant: 10),
+            tagScrollView.leadingAnchor.constraint(equalTo: frontView.leadingAnchor, constant: 20),
+            tagScrollView.trailingAnchor.constraint(equalTo: frontView.trailingAnchor, constant: -20),
+            {
+                let hc = tagScrollView.heightAnchor.constraint(equalToConstant: 28)
+                tagScrollViewHeightConstraint = hc
+                return hc
+            }(),
+
+            tagStack.topAnchor.constraint(equalTo: tagScrollView.topAnchor),
+            tagStack.leadingAnchor.constraint(equalTo: tagScrollView.leadingAnchor),
+            tagStack.trailingAnchor.constraint(equalTo: tagScrollView.trailingAnchor),
+            tagStack.bottomAnchor.constraint(equalTo: tagScrollView.bottomAnchor),
+            tagStack.heightAnchor.constraint(equalTo: tagScrollView.heightAnchor),
+
+            frontScrollView.topAnchor.constraint(equalTo: tagScrollView.bottomAnchor, constant: 8),
             frontScrollView.leadingAnchor.constraint(equalTo: frontView.leadingAnchor, constant: 20),
             frontScrollView.trailingAnchor.constraint(equalTo: frontView.trailingAnchor, constant: -20),
             frontScrollView.bottomAnchor.constraint(equalTo: frontHintLabel.topAnchor, constant: -8),
@@ -521,6 +570,40 @@ class FlashCardViewController: UIViewController {
         progressLabel.text = "\(current) / \(total)"
     }
 
+    /// Rebuilds the tag chip row for the current problem.
+    /// Clears existing chips first so navigation between problems always shows the correct tags.
+    /// Hides the row entirely when the problem has no topic tags.
+    private func updateTagChips() {
+        tagStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        let tags = problem.topicTags
+        tagScrollView.isHidden = tags.isEmpty
+        tagScrollViewHeightConstraint?.constant = tags.isEmpty ? 0 : 28
+        for (index, tag) in tags.enumerated() {
+            let color = ProblemDeckConfig.color(forListTag: tag.slug)
+            let icon  = ProblemDeckConfig.icon(forListTag: tag.slug)
+            let btn   = UIButton(type: .system)
+            btn.setTitle("\(icon) \(tag.name)", for: .normal)
+            btn.titleLabel?.font = UIFont.systemFont(ofSize: 12, weight: .medium)
+            btn.setTitleColor(color, for: .normal)
+            btn.backgroundColor = color.withAlphaComponent(0.12)
+            btn.layer.cornerRadius = 10
+            btn.contentEdgeInsets = UIEdgeInsets(top: 4, left: 10, bottom: 4, right: 10)
+            btn.tag = index  // used in tap handler to look up the correct TopicTag
+            btn.addTarget(self, action: #selector(tagChipTapped(_:)), for: .touchUpInside)
+            tagStack.addArrangedSubview(btn)
+        }
+    }
+
+    /// Navigates to a ProblemsViewController filtered by the tapped topic tag.
+    /// Reuses the existing listTag-based fetch path — no new Firestore logic needed.
+    @objc private func tagChipTapped(_ sender: UIButton) {
+        let index = sender.tag
+        guard index < problem.topicTags.count else { return }
+        let topicTag = problem.topicTags[index]
+        let vc = ProblemsViewController(listTag: topicTag.slug, title: topicTag.name)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
     @objc private func prevTapped() {
         guard currentIndex > 0 else { return }
         currentIndex -= 1
@@ -545,10 +628,11 @@ class FlashCardViewController: UIViewController {
         frontScrollView.setContentOffset(.zero, animated: false)
         backScrollView.setContentOffset(.zero, animated: false)
 
-        // Sync both action buttons and progress from in-memory state — no Firestore reads needed.
+        // Sync buttons, progress, and tag chips from in-memory state — no Firestore reads needed.
         updateSolvedButton()
         updateLikeButton()
         updateProgress()
+        updateTagChips()
 
         let token = UUID()
         loadToken = token
@@ -558,21 +642,45 @@ class FlashCardViewController: UIViewController {
     // MARK: - Like
 
     private func setupLikeButton() {
-        let btn = UIBarButtonItem(
+        let heartBtn = UIBarButtonItem(
             image: UIImage(systemName: "heart"),
             style: .plain,
             target: self,
             action: #selector(likeTapped)
         )
-        btn.tintColor = .systemRed
-        navigationItem.leftBarButtonItem = btn
-        // Keep the system back button visible alongside the heart icon.
-        navigationItem.leftItemsSupplementBackButton = true
+        heartBtn.tintColor = .systemRed
+
+        // Custom back button so we can intercept the tap and show a confirmation
+        // dialog before popping. hidesBackButton suppresses the auto-generated item.
+        let backBtn = UIBarButtonItem(
+            image: UIImage(systemName: "chevron.left"),
+            style: .plain,
+            target: self,
+            action: #selector(backTapped)
+        )
+        backBtn.tintColor = .label
+
+        navigationItem.hidesBackButton = true
+        navigationItem.leftBarButtonItems = [backBtn, heartBtn]
+    }
+
+    @objc private func backTapped() {
+        let alert = UIAlertController(
+            title: "Exit Study Session?",
+            message: "Your timer progress will be lost if you leave now.",
+            preferredStyle: .alert
+        )
+        alert.addAction(UIAlertAction(title: "Continue Studying", style: .cancel))
+        alert.addAction(UIAlertAction(title: "Exit", style: .destructive) { [weak self] _ in
+            self?.navigationController?.popViewController(animated: true)
+        })
+        present(alert, animated: true)
     }
 
     private func updateLikeButton() {
         let isLiked = likedProblemIds.contains(problem.id)
-        navigationItem.leftBarButtonItem?.image = UIImage(
+        // leftBarButtonItems = [backBtn, heartBtn] — heart is at index 1.
+        navigationItem.leftBarButtonItems?[1].image = UIImage(
             systemName: isLiked ? "heart.fill" : "heart"
         )
     }
@@ -836,6 +944,36 @@ class FlashCardViewController: UIViewController {
         stopTimer()
         timerLabel.text = "⏱ 00:00"
         showAlert(title: "⏰ Time's Up!", message: "Your study session has ended.")
+    }
+
+    // MARK: - Help Dialog
+
+    private static let helpSeenKey = "hasSeenFlashCardHelp"
+
+    /// Shows a one-time usage guide the first time the user opens a study session.
+    /// After the user taps "Got it", the flag is written to UserDefaults and the alert
+    /// never appears again — even across app restarts.
+    private func showHelpIfNeeded() {
+        if UserDefaults.standard.bool(forKey: Self.helpSeenKey) {
+            // Returning user: start the session timer immediately, no dialog needed.
+            startTimer()
+            return
+        }
+        // First-time user: show the help dialog. The timer starts only after
+        // "Got it" is tapped so no session time is lost while reading.
+        let body = """
+            • Tap the card to flip between question and solution
+            • Shake your phone to flip
+            • 💡 Hints reveal step-by-step clues
+            • ✓ Mark a problem solved when you're ready
+            • Timer counts down your 10-minute session
+            """
+        let alert = UIAlertController(title: "How to Use Flash Cards", message: body, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "Got it", style: .default) { [weak self] _ in
+            UserDefaults.standard.set(true, forKey: Self.helpSeenKey)
+            self?.startTimer()
+        })
+        present(alert, animated: true)
     }
 
     // MARK: - Helpers
