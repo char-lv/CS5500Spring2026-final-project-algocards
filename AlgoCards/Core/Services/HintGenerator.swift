@@ -5,17 +5,17 @@
 
 import Foundation
 
-// TODO: Move Claude API call to Firebase Cloud Function in production.
-//       Client-side invocation exposes ANTHROPIC_API_KEY in the app bundle.
-//       Current approach matches the existing OpenAI integration pattern and is
+// TODO: Move OpenAI API call to Firebase Cloud Function in production.
+//       Client-side invocation exposes OPENAI_API_KEY in the app bundle.
+//       Current approach matches the existing OpenAI recommendation integration pattern and is
 //       acceptable for the current development phase.
 
-/// Generates 3 progressive hints for a LeetCode problem using the Claude API.
+/// Generates 3 progressive hints for a LeetCode problem using the OpenAI Chat Completions API.
 ///
 /// Responsibilities (only):
 ///   - Fetch the problem description via NetworkManager (usually a memory cache hit)
-///   - Build a structured Claude prompt
-///   - Call the Anthropic Messages API via URLSession
+///   - Build a structured prompt
+///   - Call the OpenAI Chat Completions API via URLSession
 ///   - Parse and strictly validate the response
 ///
 /// Does NOT access Firestore. Does NOT manage any cache.
@@ -24,6 +24,16 @@ final class HintGenerator {
 
     static let shared = HintGenerator()
     private init() {}
+
+    /// Dedicated session with a 5-second request timeout (NFR-10).
+    /// Using a private session instead of URLSession.shared ensures the timeout
+    /// applies only to AI calls and does not affect other URLSession users.
+    private static let session: URLSession = {
+        let config = URLSessionConfiguration.default
+        config.timeoutIntervalForRequest  = 5.0   // NFR-10: 3-5 s max
+        config.timeoutIntervalForResource = 5.0
+        return URLSession(configuration: config)
+    }()
 
     enum GenerationError: Error {
         case missingAPIKey
@@ -36,15 +46,15 @@ final class HintGenerator {
     // MARK: - Configuration
 
     private var apiKey: String? {
-        guard let key = Bundle.main.object(forInfoDictionaryKey: "ANTHROPIC_API_KEY") as? String,
+        guard let key = Bundle.main.object(forInfoDictionaryKey: "OPENAI_API_KEY") as? String,
               !key.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
         return key
     }
 
     private var model: String {
-        let raw = Bundle.main.object(forInfoDictionaryKey: "CLAUDE_HINT_MODEL") as? String ?? ""
+        let raw = Bundle.main.object(forInfoDictionaryKey: "OPENAI_RECOMMENDATION_MODEL") as? String ?? ""
         let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? "claude-haiku-4-5-20251001" : trimmed
+        return trimmed.isEmpty ? "gpt-4.1-mini" : trimmed
     }
 
     // MARK: - Public API
@@ -68,7 +78,7 @@ final class HintGenerator {
 
             switch result {
             case .success(let fullProblem):
-                self.callClaudeAPI(
+                self.callOpenAIAPI(
                     problem: problem,
                     description: fullProblem.description,
                     apiKey: apiKey,
@@ -81,29 +91,31 @@ final class HintGenerator {
         }
     }
 
-    // MARK: - Claude API
+    // MARK: - OpenAI API
 
-    private func callClaudeAPI(
+    private func callOpenAIAPI(
         problem: ProblemListItem,
         description: String,
         apiKey: String,
         completion: @escaping (Result<[String], GenerationError>) -> Void
     ) {
-        guard let url = URL(string: "https://api.anthropic.com/v1/messages") else {
+        guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
             completion(.failure(.invalidResponse))
             return
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
-        request.setValue("2023-06-01", forHTTPHeaderField: "anthropic-version")
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
-        let body = ClaudeRequest(
+        let body = ChatCompletionRequest(
             model: model,
-            max_tokens: 256,
-            messages: [ClaudeMessage(role: "user", content: buildPrompt(problem: problem, description: description))]
+            messages: [
+                ChatMessage(role: "system", content: "You are a coding interview coach that returns only valid JSON."),
+                ChatMessage(role: "user", content: buildPrompt(problem: problem, description: description))
+            ],
+            temperature: 0.2
         )
 
         do {
@@ -113,7 +125,7 @@ final class HintGenerator {
             return
         }
 
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
+        Self.session.dataTask(with: request) { [weak self] data, response, error in
             guard let self else { completion(.failure(.invalidResponse)); return }
 
             if let error {
@@ -133,12 +145,12 @@ final class HintGenerator {
             }
 
             do {
-                let response = try JSONDecoder().decode(ClaudeResponse.self, from: data)
-                guard let textBlock = response.content.first(where: { $0.type == "text" }) else {
+                let response = try JSONDecoder().decode(ChatCompletionResponse.self, from: data)
+                guard let content = response.choices.first?.message.content else {
                     completion(.failure(.invalidResponse))
                     return
                 }
-                let hints = try self.parseAndValidate(textBlock.text)
+                let hints = try self.parseAndValidate(content)
                 completion(.success(hints))
             } catch {
                 completion(.failure(.validationFailed))
@@ -216,24 +228,23 @@ final class HintGenerator {
 
 // MARK: - Private Request / Response Models
 
-private struct ClaudeRequest: Encodable {
+private struct ChatCompletionRequest: Encodable {
     let model: String
-    let max_tokens: Int
-    let messages: [ClaudeMessage]
+    let messages: [ChatMessage]
+    let temperature: Double
 }
 
-private struct ClaudeMessage: Encodable {
+private struct ChatMessage: Codable {
     let role: String
     let content: String
 }
 
-private struct ClaudeResponse: Decodable {
-    let content: [ClaudeContent]
+private struct ChatCompletionResponse: Decodable {
+    let choices: [ChatChoice]
 }
 
-private struct ClaudeContent: Decodable {
-    let type: String
-    let text: String
+private struct ChatChoice: Decodable {
+    let message: ChatMessage
 }
 
 private struct HintGenerationResponse: Decodable {

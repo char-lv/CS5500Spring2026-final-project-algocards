@@ -30,7 +30,9 @@ class FlashCardViewController: UIViewController {
     // MARK: - Timer State
     private var countdownTimer: Timer?
     private var remainingSeconds = 0
-    private static let timerDuration = 10 * 60  // V1: fixed 10-minute session
+    /// Duration chosen by the user at the start of each session (FR-19).
+    /// Defaults to 10 minutes; overwritten by showTimerPicker() before startTimer() is called.
+    private var selectedTimerDuration = 10 * 60
 
     // MARK: - Hint State
     /// Tracks how many hint levels the user has revealed for the current card.
@@ -514,9 +516,17 @@ class FlashCardViewController: UIViewController {
         // Store a direct reference so hintTapped() can enable/disable it without index access.
         hintBarButton = hintNavButton
 
-        // [0] = solvedButton (rightmost), [1] = hintNavButton (to its left).
+        let listButton = UIBarButtonItem(
+            image: UIImage(systemName: "list.bullet"),
+            style: .plain,
+            target: self,
+            action: #selector(listTapped)
+        )
+        listButton.tintColor = .systemIndigo
+
+        // [0] = solvedButton (rightmost), [1] = hintNavButton, [2] = listButton (leftmost).
         // updateSolvedButton() targets index 0; keep this order in sync if buttons change.
-        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton]
+        navigationItem.rightBarButtonItems = [solvedButton, hintNavButton, listButton]
         updateSolvedButton()
     }
 
@@ -844,6 +854,25 @@ class FlashCardViewController: UIViewController {
         navigationController?.pushViewController(answerVC, animated: true)
     }
 
+    @objc private func listTapped() {
+        let picker = ProblemListPickerViewController(
+            problems: problems,
+            currentIndex: currentIndex,
+            solvedProblemIds: solvedProblemIds
+        ) { [weak self] selectedIndex in
+            guard let self else { return }
+            self.currentIndex = selectedIndex
+            self.loadCurrentProblem()
+        }
+        let nav = UINavigationController(rootViewController: picker)
+        nav.modalPresentationStyle = .pageSheet
+        if let sheet = nav.sheetPresentationController {
+            sheet.detents = [.medium(), .large()]
+            sheet.prefersGrabberVisible = true
+        }
+        present(nav, animated: true)
+    }
+
     // MARK: - Hints
 
     @objc private func hintTapped() {
@@ -872,19 +901,40 @@ class FlashCardViewController: UIViewController {
         let total = hints.count
         let nextLevel = hintLevel + 1
 
-        let title: String
-        let message: String
-        if nextLevel <= total {
-            title = "Hint \(nextLevel) / \(total)"
-            message = hints[nextLevel - 1]
-            hintLevel = nextLevel
-        } else {
-            title = "No More Hints"
-            message = "You've already seen all \(total) hints for this problem."
+        // All hints already seen — nothing more to reveal.
+        guard nextLevel <= total else {
+            let alert = UIAlertController(
+                title: "No More Hints",
+                message: "You've already seen all \(total) hints for this problem.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+            return
         }
 
-        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        // Advance the level now so both dismiss paths (OK and "I Got It!") leave
+        // hintLevel in a consistent state — at least nextLevel has been revealed.
+        hintLevel = nextLevel
+
+        let alert = UIAlertController(
+            title: "Hint \(nextLevel) / \(total)",
+            message: hints[nextLevel - 1],
+            preferredStyle: .alert
+        )
+
+        // "Skip Remaining" — FR-12: skip any remaining hint levels for this problem.
+        // .cancel style places it on the left so it is harder to tap accidentally.
+        // Only shown when at least one more level exists after this one.
+        if nextLevel < total {
+            alert.addAction(UIAlertAction(title: "Skip Remaining", style: .cancel) { [weak self] _ in
+                self?.hintLevel = total
+            })
+        }
+
+        // "OK" — .default style (right side, bold) — dismiss and keep next hint available.
         alert.addAction(UIAlertAction(title: "OK", style: .default))
+
         present(alert, animated: true)
     }
 
@@ -901,7 +951,7 @@ class FlashCardViewController: UIViewController {
 
     private func startTimer() {
         stopTimer()  // Invalidates any existing timer before creating a new one, preventing duplicates.
-        remainingSeconds = FlashCardViewController.timerDuration
+        remainingSeconds = selectedTimerDuration
         updateTimerDisplay()
         countdownTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self else { return }
@@ -955,24 +1005,52 @@ class FlashCardViewController: UIViewController {
     /// never appears again — even across app restarts.
     private func showHelpIfNeeded() {
         if UserDefaults.standard.bool(forKey: Self.helpSeenKey) {
-            // Returning user: start the session timer immediately, no dialog needed.
-            startTimer()
+            // Returning user: go straight to the timer picker, no help dialog needed.
+            showTimerPicker()
             return
         }
-        // First-time user: show the help dialog. The timer starts only after
-        // "Got it" is tapped so no session time is lost while reading.
+        // First-time user: show the help dialog first, then the timer picker
+        // after "Got it" so no session time is lost while reading instructions.
         let body = """
             • Tap the card to flip between question and solution
             • Shake your phone to flip
             • 💡 Hints reveal step-by-step clues
             • ✓ Mark a problem solved when you're ready
-            • Timer counts down your 10-minute session
+            • Timer counts down your study session
             """
         let alert = UIAlertController(title: "How to Use Flash Cards", message: body, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "Got it", style: .default) { [weak self] _ in
             UserDefaults.standard.set(true, forKey: Self.helpSeenKey)
-            self?.startTimer()
+            self?.showTimerPicker()
         })
+        present(alert, animated: true)
+    }
+
+    /// Prompts the user to choose a session duration, then starts the timer (FR-19).
+    /// Presented once per session, immediately after the help dialog (or instead of it
+    /// for returning users). Cancelling dismisses the picker without starting the timer;
+    /// the user can still navigate freely using the existing back button.
+    private func showTimerPicker() {
+        let alert = UIAlertController(
+            title: "Set Study Timer",
+            message: "How long would you like to practice?",
+            preferredStyle: .alert
+        )
+        let options: [(Int, String)] = [
+            (5,  "5 minutes"),
+            (10, "10 minutes (recommended)"),
+            (15, "15 minutes"),
+            (20, "20 minutes"),
+        ]
+        for (minutes, label) in options {
+            alert.addAction(UIAlertAction(title: label, style: .default) { [weak self] _ in
+                self?.selectedTimerDuration = minutes * 60
+                self?.startTimer()
+            })
+        }
+        // Cancel: dismiss the picker without starting the timer.
+        // selectedTimerDuration and all other state remain unchanged.
+        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
         present(alert, animated: true)
     }
 

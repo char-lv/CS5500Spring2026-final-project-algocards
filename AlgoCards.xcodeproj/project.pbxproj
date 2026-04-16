@@ -11,6 +11,7 @@
 		1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1816EDE32F6D33AA007480FE /* AuthViewController.swift */; };
 		183A3EB12F85E53600DE68CB /* HintService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 183A3EB02F85E53600DE68CB /* HintService.swift */; };
 		183A3EB32F85E53600DE68CB /* HintGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 183A3EB22F85E53600DE68CB /* HintGenerator.swift */; };
+		185EC8C62F9172ED003CBDE8 /* ProblemListPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 185EC8C52F9172ED003CBDE8 /* ProblemListPickerViewController.swift */; };
 		A3F1B2C12F516FE90065C963 /* ProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */; };
 		CBD3E2BF2F516CFC008663AB /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2BE2F516CFC008663AB /* AppDelegate.swift */; };
 		CBD3E2C12F516CFC008663AB /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD3E2C02F516CFC008663AB /* SceneDelegate.swift */; };
@@ -48,6 +49,7 @@
 		1816EDE32F6D33AA007480FE /* AuthViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AuthViewController.swift; sourceTree = "<group>"; };
 		183A3EB02F85E53600DE68CB /* HintService.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HintService.swift; sourceTree = "<group>"; };
 		183A3EB22F85E53600DE68CB /* HintGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HintGenerator.swift; sourceTree = "<group>"; };
+		185EC8C52F9172ED003CBDE8 /* ProblemListPickerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ProblemListPickerViewController.swift; sourceTree = "<group>"; };
 		1A3E703F584EB900726A88F9 /* Pods-AlgoCards.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-AlgoCards.debug.xcconfig"; path = "Target Support Files/Pods-AlgoCards/Pods-AlgoCards.debug.xcconfig"; sourceTree = "<group>"; };
 		2DAA0BE30F6FBEBCA081C092 /* Pods_AlgoCards.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_AlgoCards.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		A3F1B2C02F516FE90065C963 /* ProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewController.swift; sourceTree = "<group>"; };
@@ -169,6 +171,7 @@
 		CBF3B2D02F516FE90065C963 /* Practice */ = {
 			isa = PBXGroup;
 			children = (
+				185EC8C52F9172ED003CBDE8 /* ProblemListPickerViewController.swift */,
 				CBF45C2C2F5A4370007739CB /* FlashCardViewController.swift */,
 				CBF45C2E2F5A4DDA007739CB /* AnswerViewController.swift */,
 			);
@@ -445,6 +448,7 @@
 				CBF3B2F12F5183820065C963 /* Comment.swift in Sources */,
 				E30000093B00000000000001 /* SocialCollectionLikeState.swift in Sources */,
 				CBF45C2F2F5A4DDA007739CB /* AnswerViewController.swift in Sources */,
+				185EC8C62F9172ED003CBDE8 /* ProblemListPickerViewController.swift in Sources */,
 				CBF45C212F58DDE5007739CB /* ProblemCell.swift in Sources */,
 				CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */,
 				CBF3B2ED2F51836E0065C963 /* User.swift in Sources */,
