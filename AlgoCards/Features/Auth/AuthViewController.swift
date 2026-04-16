@@ -233,44 +233,11 @@ class AuthViewController: UIViewController {
         }
     }
 
-    /// Handles the forgot password button tap event.
-    /// Shows an alert to collect the user's email and sends a password reset link.
     @objc private func forgotPasswordTapped() {
-        let alert = UIAlertController(
-            title: "Reset Password",
-            message: "Enter your email address and we'll send you a link to reset your password.",
-            preferredStyle: .alert
-        )
-        alert.addTextField { tf in
-            tf.placeholder = "Email"
-            tf.keyboardType = .emailAddress
-            tf.autocapitalizationType = .none
-            tf.autocorrectionType = .no
-        }
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel))
-        alert.addAction(UIAlertAction(title: "Send", style: .default) { [weak self] _ in
-            let email = alert.textFields?.first?.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            guard !email.isEmpty else {
-                self?.showAuthError("Please enter your email address.")
-                return
-            }
-            AuthService.shared.resetPassword(email: email) { error in
-                DispatchQueue.main.async {
-                    if let error = error {
-                        self?.showAuthError(error.localizedDescription)
-                    } else {
-                        let confirmation = UIAlertController(
-                            title: "Email Sent",
-                            message: "A password reset link has been sent to \(email). Please check your inbox.",
-                            preferredStyle: .alert
-                        )
-                        confirmation.addAction(UIAlertAction(title: "OK", style: .default))
-                        self?.present(confirmation, animated: true)
-                    }
-                }
-            }
-        })
-        present(alert, animated: true)
+        let vc = ForgotPasswordViewController()
+        vc.initialEmail = emailField.text?.trimmingCharacters(in: .whitespacesAndNewlines)
+        vc.modalPresentationStyle = .fullScreen
+        present(vc, animated: true)
     }
 
     /// Dismisses the keyboard when the user taps outside of text fields.
