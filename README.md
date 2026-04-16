@@ -1,7 +1,7 @@
 # AlgoCard 📚✨
 
 ## Overview 🧠
-AlgoCard is an Android flashcard app designed for LeetCode-style interview preparation. It helps users review algorithms efficiently with curated decks, quick flashcard workflows, and optional AI-powered hints and recommendations.
+AlgoCard is an iOS flashcard app designed for LeetCode-style interview preparation. It helps users review algorithms efficiently with curated decks, quick flashcard workflows, and optional AI-powered hints and recommendations.
 
 ## Key Features 🚀
 - 📦 Curated algorithm decks (popular interview sets + topic-based decks)
@@ -10,10 +10,10 @@ AlgoCard is an Android flashcard app designed for LeetCode-style interview prepa
 - 🤖 Optional AI features: multi-level hints + personalized “next best question” recommendations
 
 ## Tech Stack 🛠️
-- 📱 Android (Android Studio)
+- 📱 iOS (Swift + UIKit)
 - 🧱 MVVM architecture
 - 🔐 Firebase Authentication + Firestore
-- 🌐 Retrofit (networking)
+- 🌐 URLSession (networking)
 - 🧠 Anthropic Claude API / OpenAI (AI features)
 
 ## Team 👥
