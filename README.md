@@ -10,10 +10,10 @@ AlgoCard is an iOS flashcard app designed for LeetCode-style interview preparati
 - 🤖 Optional AI features: multi-level hints + personalized “next best question” recommendations
 
 ## Tech Stack 🛠️
-- 📱 iOS (Swift + UIKit)
+- 📱 iOS (Swift + UIKit + XCode)
 - 🧱 MVVM architecture
 - 🔐 Firebase Authentication + Firestore
-- 🌐 URLSession (networking)
+- 🌐 Alamofire (networking)
 - 🧠 Anthropic Claude API / OpenAI (AI features)
 
 ## Team 👥
