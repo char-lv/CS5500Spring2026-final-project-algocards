@@ -28,7 +28,7 @@ class HomeViewController: UIViewController {
     private lazy var curatedDecks: [DeckCardItem] = defaultCuratedDecks
     private lazy var categoryDecks: [DeckCardItem] = makeFallbackCategoryDecks()
 
-    private var currentRecommendation: PersonalizedRecommendation?
+    private var currentRecommendations: [PersonalizedRecommendation] = []
     private var isRecommendationLoading = false
     private var shownRecommendationIds = Set<String>()
 
@@ -114,33 +114,15 @@ class HomeViewController: UIViewController {
         return l
     }()
 
-    private let recommendationProblemLabel: UILabel = {
-        let l = UILabel()
-        l.font = UIFont.boldSystemFont(ofSize: 16)
-        l.numberOfLines = 0
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
+    private let questionListStack: UIStackView = {
+        let sv = UIStackView()
+        sv.axis = .vertical
+        sv.spacing = 0
+        sv.translatesAutoresizingMaskIntoConstraints = false
+        return sv
     }()
 
-    private let recommendationMetaLabel: UILabel = {
-        let l = UILabel()
-        l.font = UIFont.systemFont(ofSize: 13, weight: .medium)
-        l.textColor = .secondaryLabel
-        l.numberOfLines = 1
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
-
-    private let recommendationReasonLabel: UILabel = {
-        let l = UILabel()
-        l.font = UIFont.systemFont(ofSize: 15)
-        l.textColor = .secondaryLabel
-        l.numberOfLines = 0
-        l.translatesAutoresizingMaskIntoConstraints = false
-        return l
-    }()
-
-    private let recommendationActionButton: UIButton = {
+    private let startAllButton: UIButton = {
         let btn = UIButton(type: .system)
         btn.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
         btn.setTitleColor(.white, for: .normal)
@@ -179,9 +161,9 @@ class HomeViewController: UIViewController {
             action: #selector(leaderboardTapped)
         )
 
-        recommendationActionButton.addTarget(
+        startAllButton.addTarget(
             self,
-            action: #selector(openRecommendationTapped),
+            action: #selector(startAllRecommendationsTapped),
             for: .touchUpInside
         )
         recommendationRetryButton.addTarget(
@@ -248,10 +230,17 @@ class HomeViewController: UIViewController {
         loadRecommendation(force: true)
     }
 
-    @objc private func openRecommendationTapped() {
-        guard let recommendation = currentRecommendation else { return }
-        let flashCardVC = FlashCardViewController(problems: [recommendation.problem], currentIndex: 0)
-        navigationController?.pushViewController(flashCardVC, animated: true)
+    @objc private func startAllRecommendationsTapped() {
+        guard !currentRecommendations.isEmpty else { return }
+        let vc = FlashCardViewController(problems: currentRecommendations.map { $0.problem }, currentIndex: 0)
+        navigationController?.pushViewController(vc, animated: true)
+    }
+
+    @objc private func questionRowTapped(_ sender: UIButton) {
+        guard currentRecommendations.indices.contains(sender.tag) else { return }
+        let problem = currentRecommendations[sender.tag].problem
+        let vc = FlashCardViewController(problems: [problem], currentIndex: 0)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
     private func setupUI() {
@@ -314,10 +303,8 @@ class HomeViewController: UIViewController {
     private func buildRecommendationCard() -> UIView {
         recommendationCard.addSubview(recommendationBadgeLabel)
         recommendationCard.addSubview(recommendationHeadlineLabel)
-        recommendationCard.addSubview(recommendationProblemLabel)
-        recommendationCard.addSubview(recommendationMetaLabel)
-        recommendationCard.addSubview(recommendationReasonLabel)
-        recommendationCard.addSubview(recommendationActionButton)
+        recommendationCard.addSubview(questionListStack)
+        recommendationCard.addSubview(startAllButton)
         recommendationCard.addSubview(recommendationRetryButton)
         recommendationCard.addSubview(recommendationSpinner)
 
@@ -334,30 +321,99 @@ class HomeViewController: UIViewController {
             recommendationHeadlineLabel.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
             recommendationHeadlineLabel.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
 
-            recommendationProblemLabel.topAnchor.constraint(equalTo: recommendationHeadlineLabel.bottomAnchor, constant: 10),
-            recommendationProblemLabel.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
-            recommendationProblemLabel.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
+            questionListStack.topAnchor.constraint(equalTo: recommendationHeadlineLabel.bottomAnchor, constant: 12),
+            questionListStack.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor),
+            questionListStack.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor),
 
-            recommendationMetaLabel.topAnchor.constraint(equalTo: recommendationProblemLabel.bottomAnchor, constant: 6),
-            recommendationMetaLabel.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
-            recommendationMetaLabel.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
+            startAllButton.topAnchor.constraint(equalTo: questionListStack.bottomAnchor, constant: 16),
+            startAllButton.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
+            startAllButton.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
+            startAllButton.heightAnchor.constraint(equalToConstant: 46),
 
-            recommendationReasonLabel.topAnchor.constraint(equalTo: recommendationMetaLabel.bottomAnchor, constant: 10),
-            recommendationReasonLabel.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
-            recommendationReasonLabel.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
-
-            recommendationActionButton.topAnchor.constraint(equalTo: recommendationReasonLabel.bottomAnchor, constant: 18),
-            recommendationActionButton.leadingAnchor.constraint(equalTo: recommendationCard.leadingAnchor, constant: 18),
-            recommendationActionButton.trailingAnchor.constraint(equalTo: recommendationCard.trailingAnchor, constant: -18),
-            recommendationActionButton.heightAnchor.constraint(equalToConstant: 46),
-
-            recommendationRetryButton.topAnchor.constraint(equalTo: recommendationActionButton.bottomAnchor, constant: 10),
+            recommendationRetryButton.topAnchor.constraint(equalTo: startAllButton.bottomAnchor, constant: 10),
             recommendationRetryButton.centerXAnchor.constraint(equalTo: recommendationCard.centerXAnchor),
             recommendationRetryButton.bottomAnchor.constraint(equalTo: recommendationCard.bottomAnchor, constant: -16),
         ])
 
         renderRecommendationLoadingState()
         return recommendationCard
+    }
+
+    private func makeQuestionRow(rank: Int, recommendation: PersonalizedRecommendation, index: Int) -> UIView {
+        let container = UIButton(type: .system)
+        container.tag = index
+        container.addTarget(self, action: #selector(questionRowTapped(_:)), for: .touchUpInside)
+        container.translatesAutoresizingMaskIntoConstraints = false
+
+        let rankLabel = UILabel()
+        rankLabel.text = "\(rank)"
+        rankLabel.font = UIFont.boldSystemFont(ofSize: 13)
+        rankLabel.textColor = .tertiaryLabel
+        rankLabel.textAlignment = .center
+        rankLabel.isUserInteractionEnabled = false
+        rankLabel.translatesAutoresizingMaskIntoConstraints = false
+        rankLabel.widthAnchor.constraint(equalToConstant: 28).isActive = true
+
+        let titleLabel = UILabel()
+        titleLabel.text = "#\(recommendation.problem.id) \(recommendation.problem.title)"
+        titleLabel.font = UIFont.systemFont(ofSize: 14, weight: .medium)
+        titleLabel.textColor = .label
+        titleLabel.numberOfLines = 1
+        titleLabel.isUserInteractionEnabled = false
+
+        let difficulty = recommendation.problem.difficulty
+        let diffLabel = UILabel()
+        diffLabel.text = difficulty.rawValue
+        diffLabel.font = UIFont.systemFont(ofSize: 11, weight: .semibold)
+        diffLabel.textAlignment = .center
+        diffLabel.layer.cornerRadius = 6
+        diffLabel.clipsToBounds = true
+        diffLabel.isUserInteractionEnabled = false
+        diffLabel.translatesAutoresizingMaskIntoConstraints = false
+        diffLabel.widthAnchor.constraint(equalToConstant: 54).isActive = true
+        diffLabel.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        switch difficulty {
+        case .easy:
+            diffLabel.textColor = .systemGreen
+            diffLabel.backgroundColor = UIColor.systemGreen.withAlphaComponent(0.12)
+        case .medium:
+            diffLabel.textColor = .systemOrange
+            diffLabel.backgroundColor = UIColor.systemOrange.withAlphaComponent(0.12)
+        case .hard:
+            diffLabel.textColor = .systemRed
+            diffLabel.backgroundColor = UIColor.systemRed.withAlphaComponent(0.12)
+        }
+
+        let chevron = UIImageView(image: UIImage(systemName: "chevron.right"))
+        chevron.tintColor = .tertiaryLabel
+        chevron.contentMode = .scaleAspectFit
+        chevron.isUserInteractionEnabled = false
+        chevron.translatesAutoresizingMaskIntoConstraints = false
+        chevron.widthAnchor.constraint(equalToConstant: 12).isActive = true
+
+        let row = UIStackView(arrangedSubviews: [rankLabel, titleLabel, diffLabel, chevron])
+        row.axis = .horizontal
+        row.spacing = 10
+        row.alignment = .center
+        row.isUserInteractionEnabled = false
+        row.translatesAutoresizingMaskIntoConstraints = false
+
+        container.addSubview(row)
+        NSLayoutConstraint.activate([
+            container.heightAnchor.constraint(equalToConstant: 44),
+            row.leadingAnchor.constraint(equalTo: container.leadingAnchor, constant: 14),
+            row.trailingAnchor.constraint(equalTo: container.trailingAnchor, constant: -14),
+            row.centerYAnchor.constraint(equalTo: container.centerYAnchor),
+        ])
+        return container
+    }
+
+    private func makeListSeparator() -> UIView {
+        let sep = UIView()
+        sep.backgroundColor = .separator
+        sep.translatesAutoresizingMaskIntoConstraints = false
+        sep.heightAnchor.constraint(equalToConstant: 0.5).isActive = true
+        return sep
     }
 
     private func buildCuratedSectionContent() -> UIView {
@@ -791,24 +847,24 @@ class HomeViewController: UIViewController {
 
     private func loadRecommendation(force: Bool = false) {
         guard !isRecommendationLoading else { return }
-        if currentRecommendation != nil && !force { return }
+        if !currentRecommendations.isEmpty && !force { return }
 
         isRecommendationLoading = true
         renderRecommendationLoadingState()
 
-        recommendationService.generateRecommendation(
+        recommendationService.generateRecommendations(
             excludingProblemIds: shownRecommendationIds
         ) { [weak self] result in
             guard let self else { return }
             self.isRecommendationLoading = false
 
             switch result {
-            case .success(let recommendation):
-                self.currentRecommendation = recommendation
-                self.shownRecommendationIds.insert(recommendation.problem.id)
-                self.renderRecommendation(recommendation)
+            case .success(let recommendations):
+                self.currentRecommendations = recommendations
+                recommendations.forEach { self.shownRecommendationIds.insert($0.problem.id) }
+                self.renderRecommendation(recommendations)
             case .failure(let error):
-                self.currentRecommendation = nil
+                self.currentRecommendations = []
                 self.renderRecommendationError(error.localizedDescription)
             }
         }
@@ -817,34 +873,47 @@ class HomeViewController: UIViewController {
     private func renderRecommendationLoadingState() {
         recommendationSpinner.startAnimating()
         recommendationBadgeLabel.text = "ANALYZING"
-        recommendationHeadlineLabel.text = "Finding your next best question"
-        recommendationProblemLabel.text = "We’re ranking your top candidates and looking for a related unseen follow-up."
-        recommendationMetaLabel.text = "Refresh manually when you want a new suggestion."
-        recommendationReasonLabel.text = "Phase 2 uses AI to suggest a related unseen problem when available. After 10 AI recommendations in one day, the card automatically falls back to the Phase 1 personalized pick."
-        recommendationActionButton.isHidden = true
+        recommendationHeadlineLabel.text = "Curating your top 10 questions…"
+        questionListStack.arrangedSubviews.forEach {
+            questionListStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        startAllButton.isHidden = true
         recommendationRetryButton.isHidden = true
     }
 
-    private func renderRecommendation(_ recommendation: PersonalizedRecommendation) {
+    private func renderRecommendation(_ recommendations: [PersonalizedRecommendation]) {
         recommendationSpinner.stopAnimating()
-        recommendationBadgeLabel.text = recommendation.sourceBadgeText.uppercased()
-        recommendationHeadlineLabel.text = recommendation.headline
-        recommendationProblemLabel.text = "#\(recommendation.problem.id) \(recommendation.problem.title)"
-        recommendationMetaLabel.text = "\(recommendation.problem.difficulty.rawValue) • Focus: \(recommendation.focusArea)"
-        recommendationReasonLabel.text = recommendation.reason
-        recommendationActionButton.isHidden = false
+
+        let anyAI = recommendations.contains { $0.source == .ai }
+        recommendationBadgeLabel.text = anyAI ? "AI GENERATED" : "PERSONALIZED PICKS"
+        recommendationHeadlineLabel.text = "Your Top \(recommendations.count) Recommended Questions"
+
+        questionListStack.arrangedSubviews.forEach {
+            questionListStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        recommendations.enumerated().forEach { index, rec in
+            questionListStack.addArrangedSubview(makeQuestionRow(rank: index + 1, recommendation: rec, index: index))
+            if index < recommendations.count - 1 {
+                questionListStack.addArrangedSubview(makeListSeparator())
+            }
+        }
+
+        startAllButton.isHidden = false
+        startAllButton.setTitle("Start All \(recommendations.count) Questions", for: .normal)
         recommendationRetryButton.isHidden = false
-        recommendationActionButton.setTitle("Start \(recommendation.problem.title)", for: .normal)
     }
 
     private func renderRecommendationError(_ message: String) {
         recommendationSpinner.stopAnimating()
         recommendationBadgeLabel.text = "RECOMMENDATION"
-        recommendationHeadlineLabel.text = "We couldn't load your next question"
-        recommendationProblemLabel.text = "Your practice decks are still ready to use."
-        recommendationMetaLabel.text = nil
-        recommendationReasonLabel.text = message
-        recommendationActionButton.isHidden = true
+        recommendationHeadlineLabel.text = "We couldn’t load your questions"
+        questionListStack.arrangedSubviews.forEach {
+            questionListStack.removeArrangedSubview($0)
+            $0.removeFromSuperview()
+        }
+        startAllButton.isHidden = true
         recommendationRetryButton.isHidden = false
     }
 

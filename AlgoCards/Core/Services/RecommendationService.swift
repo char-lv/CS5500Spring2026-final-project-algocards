@@ -86,10 +86,10 @@ final class RecommendationService {
 
     private init() {}
 
-    func generateRecommendation(
+    func generateRecommendations(
         excludingProblemIds: Set<String> = [],
-        poolSize: Int = 5,
-        completion: @escaping (Result<PersonalizedRecommendation, Error>) -> Void
+        count: Int = 10,
+        completion: @escaping (Result<[PersonalizedRecommendation], Error>) -> Void
     ) {
         guard let userId = AuthService.shared.currentUserId else {
             completion(.failure(RecommendationError.unauthenticated))
@@ -155,14 +155,21 @@ final class RecommendationService {
                     submissions: submissions,
                     catalog: catalog,
                     excludingProblemIds: excludingProblemIds,
-                    poolSize: poolSize
+                    poolSize: 5
                 )
 
-                let phaseOneRecommendation = self.makeRecommendation(
-                    for: context.phaseOneSelection.item,
+                let heuristicList = self.makeHeuristicList(
                     context: context,
-                    source: .heuristic
+                    excludingProblemIds: excludingProblemIds,
+                    count: count
                 )
+
+                guard !heuristicList.isEmpty else {
+                    DispatchQueue.main.async {
+                        completion(.failure(RecommendationError.noUnsolvedProblems))
+                    }
+                    return
+                }
 
                 guard
                     let config = AIRecommendationConfig.current,
@@ -170,7 +177,7 @@ final class RecommendationService {
                     self.isAIUsageAvailable(usageState)
                 else {
                     DispatchQueue.main.async {
-                        completion(.success(phaseOneRecommendation))
+                        completion(.success(heuristicList))
                     }
                     return
                 }
@@ -180,41 +187,48 @@ final class RecommendationService {
                     anchor: anchor,
                     context: context,
                     excludingProblemIds: excludingProblemIds,
-                    limit: 8
+                    limit: 15
                 )
 
                 guard !aiOptions.isEmpty else {
                     DispatchQueue.main.async {
-                        completion(.success(phaseOneRecommendation))
+                        completion(.success(heuristicList))
                     }
                     return
                 }
 
-                let prompt = self.aiRecommendationPrompt(
+                let prompt = self.aiListRecommendationPrompt(
                     anchor: anchor,
                     options: aiOptions,
-                    context: context
+                    context: context,
+                    count: count
                 )
 
-                AIRecommendationClient(config: config).generateRelatedRecommendation(prompt: prompt) { result in
+                AIRecommendationClient(config: config).generateRankedRecommendations(prompt: prompt) { result in
                     switch result {
-                    case .success(let aiResponse):
-                        guard
-                            let selectedItem = aiOptions.first(where: { $0.problem.id == aiResponse.problemId })
-                        else {
+                    case .success(let aiResponses):
+                        let aiList = aiResponses.compactMap { aiResponse -> PersonalizedRecommendation? in
+                            guard let item = aiOptions.first(where: { $0.problem.id == aiResponse.problemId }) else { return nil }
+                            return self.makeRecommendation(
+                                for: item,
+                                context: context,
+                                source: .ai,
+                                headlineOverride: aiResponse.headline,
+                                reasonOverride: aiResponse.reason
+                            )
+                        }
+
+                        if aiList.isEmpty {
                             DispatchQueue.main.async {
-                                completion(.success(phaseOneRecommendation))
+                                completion(.success(heuristicList))
                             }
                             return
                         }
 
-                        let aiRecommendation = self.makeRecommendation(
-                            for: selectedItem,
-                            context: context,
-                            source: .ai,
-                            headlineOverride: aiResponse.headline,
-                            reasonOverride: aiResponse.reason
-                        )
+                        let aiIds = Set(aiList.map { $0.problem.id })
+                        let fillers = heuristicList.filter { !aiIds.contains($0.problem.id) }
+                        let merged = aiList + Array(fillers.prefix(max(0, count - aiList.count)))
+                        let finalList = self.applyDiversitySlots(to: merged, target: context.targetDifficulty, count: count)
 
                         FirestoreService.shared.recordAIRecommendationUsage(
                             userId: userId,
@@ -222,11 +236,11 @@ final class RecommendationService {
                         ) { _ in }
 
                         DispatchQueue.main.async {
-                            completion(.success(aiRecommendation))
+                            completion(.success(finalList))
                         }
                     case .failure:
                         DispatchQueue.main.async {
-                            completion(.success(phaseOneRecommendation))
+                            completion(.success(heuristicList))
                         }
                     }
                 }
@@ -307,6 +321,86 @@ final class RecommendationService {
             phaseOneSelection: phaseOneSelection,
             rotationIndex: excludingProblemIds.count
         )
+    }
+
+    private func makeHeuristicList(
+        context: RecommendationContext,
+        excludingProblemIds: Set<String>,
+        count: Int
+    ) -> [PersonalizedRecommendation] {
+        var byDifficulty: [Difficulty: [ScoredProblem]] = [:]
+        for scored in context.ranked where !excludingProblemIds.contains(scored.item.problem.id) {
+            byDifficulty[scored.item.problem.difficulty, default: []].append(scored)
+        }
+
+        let slots = diversitySlots(for: context.targetDifficulty)
+        var result: [PersonalizedRecommendation] = []
+        var usedIds = Set<String>()
+
+        for difficulty in [Difficulty.easy, .medium, .hard] {
+            let want = slots[difficulty, default: 0]
+            for scored in (byDifficulty[difficulty] ?? []).prefix(want) {
+                result.append(makeRecommendation(for: scored.item, context: context, source: .heuristic))
+                usedIds.insert(scored.item.problem.id)
+            }
+        }
+
+        // Fill any unfilled slots (e.g. not enough Hard problems) with the best-scored remainder
+        if result.count < count {
+            let extras = context.ranked
+                .filter { !excludingProblemIds.contains($0.item.problem.id) && !usedIds.contains($0.item.problem.id) }
+                .prefix(count - result.count)
+                .map { makeRecommendation(for: $0.item, context: context, source: .heuristic) }
+            result += extras
+        }
+
+        return result
+    }
+
+    // Slot counts always sum to 10 and weight toward targetDifficulty while ensuring breadth.
+    private func diversitySlots(for targetDifficulty: Difficulty) -> [Difficulty: Int] {
+        switch targetDifficulty {
+        case .easy:   return [.easy: 5, .medium: 3, .hard: 2]
+        case .medium: return [.easy: 2, .medium: 5, .hard: 3]
+        case .hard:   return [.easy: 1, .medium: 3, .hard: 6]
+        }
+    }
+
+    // Reorders `recommendations` to honour diversity slots (Easy→Medium→Hard),
+    // preserving original priority order within each difficulty bucket.
+    // AI picks appear before heuristic fillers because they arrive first in the input.
+    private func applyDiversitySlots(
+        to recommendations: [PersonalizedRecommendation],
+        target: Difficulty,
+        count: Int
+    ) -> [PersonalizedRecommendation] {
+        let slots = diversitySlots(for: target)
+        var byDiff: [Difficulty: [PersonalizedRecommendation]] = [:]
+        for rec in recommendations {
+            byDiff[rec.problem.difficulty, default: []].append(rec)
+        }
+
+        var result: [PersonalizedRecommendation] = []
+        var usedIds = Set<String>()
+
+        for difficulty in [Difficulty.easy, .medium, .hard] {
+            let want = slots[difficulty, default: 0]
+            for rec in (byDiff[difficulty] ?? []).prefix(want) {
+                result.append(rec)
+                usedIds.insert(rec.problem.id)
+            }
+        }
+
+        // Fill any unfilled slots with the best remaining picks regardless of difficulty
+        if result.count < count {
+            for rec in recommendations where !usedIds.contains(rec.problem.id) {
+                result.append(rec)
+                usedIds.insert(rec.problem.id)
+                if result.count == count { break }
+            }
+        }
+
+        return result
     }
 
     private func makeRecommendation(
@@ -559,10 +653,11 @@ final class RecommendationService {
         return "You recently practiced \(focusArea), and this \(difficultyText) question keeps that pattern fresh while nudging you toward the right next difficulty."
     }
 
-    private func aiRecommendationPrompt(
+    private func aiListRecommendationPrompt(
         anchor: ProblemCatalogItem,
         options: [ProblemCatalogItem],
-        context: RecommendationContext
+        context: RecommendationContext,
+        count: Int
     ) -> String {
         let optionLines = options.map { option in
             let tags = option.listTags.map(displayName(for:)).joined(separator: ", ")
@@ -572,14 +667,14 @@ final class RecommendationService {
         let anchorTags = anchor.listTags.map(displayName(for:)).joined(separator: ", ")
 
         return """
-        You are choosing a new interview-practice recommendation for a learner.
+        You are selecting the top \(count) interview-practice problems for a learner.
 
         Rules:
-        - Pick exactly one problem from the candidate options.
-        - The chosen problem must feel like a natural follow-up to the anchor problem.
-        - The chosen problem must be unseen by the learner.
-        - Prefer a recommendation that is clearly related in technique, pattern, or progression.
-        - Do not invent a new problem title. Use one option exactly as given.
+        - Pick up to \(count) problems from the candidate options, ranked best-first.
+        - Each chosen problem must be unseen by the learner.
+        - Prefer problems clearly related to the anchor in technique, pattern, or progression.
+        - Do not invent problem titles. Use options exactly as given.
+        - If fewer than \(count) candidates are clearly relevant, return fewer.
 
         Anchor problem:
         - id: \(anchor.problem.id)
@@ -596,9 +691,13 @@ final class RecommendationService {
 
         Return strict JSON with exactly these keys:
         {
-          "problemId": "one id from the candidate list",
-          "headline": "short recommendation headline",
-          "reason": "1-2 short sentences explaining why this new problem is a good follow-up"
+          "recommendations": [
+            {
+              "problemId": "one id from the candidate list",
+              "headline": "short recommendation headline",
+              "reason": "1-2 short sentences explaining why this is a good next problem"
+            }
+          ]
         }
         """
     }
@@ -719,9 +818,9 @@ private final class AIRecommendationClient {
         self.config = config
     }
 
-    func generateRelatedRecommendation(
+    func generateRankedRecommendations(
         prompt: String,
-        completion: @escaping (Result<AIRelatedRecommendationResponse, Error>) -> Void
+        completion: @escaping (Result<[AIRelatedRecommendationResponse], Error>) -> Void
     ) {
         guard let url = URL(string: "https://api.openai.com/v1/chat/completions") else {
             completion(.failure(RecommendationError.noProblemsAvailable))
@@ -738,7 +837,7 @@ private final class AIRecommendationClient {
             messages: [
                 ChatMessage(
                     role: "system",
-                    content: "You choose one related practice problem from a provided list and return valid JSON only."
+                    content: "You select and rank practice problems from a provided list and return valid JSON only."
                 ),
                 ChatMessage(role: "user", content: prompt)
             ],
@@ -773,11 +872,8 @@ private final class AIRecommendationClient {
                     throw RecommendationError.noProblemsAvailable
                 }
 
-                let recommendation = try JSONDecoder().decode(
-                    AIRelatedRecommendationResponse.self,
-                    from: jsonData
-                )
-                completion(.success(recommendation))
+                let listResponse = try JSONDecoder().decode(AIRecommendationListResponse.self, from: jsonData)
+                completion(.success(listResponse.recommendations))
             } catch {
                 completion(.failure(error))
             }
@@ -805,6 +901,10 @@ private struct AIRelatedRecommendationResponse: Decodable {
     let problemId: String
     let headline: String
     let reason: String
+}
+
+private struct AIRecommendationListResponse: Decodable {
+    let recommendations: [AIRelatedRecommendationResponse]
 }
 
 private struct ChatCompletionRequest: Encodable {
