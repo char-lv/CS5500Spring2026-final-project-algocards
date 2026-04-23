@@ -41,6 +41,7 @@
 		D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100023A25000000000001 /* ProblemDeckConfig.swift */; };
 		D2A100033A25000000000001 /* LeetCodeConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100043A25000000000001 /* LeetCodeConfig.swift */; };
 		D2A100053A25000000000001 /* LegacyMirrorConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100063A25000000000001 /* LegacyMirrorConfig.swift */; };
+		D2A100073A25000000000001 /* DemoSolutionData.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A100083A25000000000001 /* DemoSolutionData.swift */; };
 		E30000013B00000000000001 /* SocialViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000023B00000000000001 /* SocialViewController.swift */; };
 		E30000033B00000000000001 /* SocialUserProfileViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000043B00000000000001 /* SocialUserProfileViewController.swift */; };
 		E30000053B00000000000001 /* SocialUserCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = E30000063B00000000000001 /* SocialUserCell.swift */; };
@@ -89,6 +90,7 @@
 		D2A100023A25000000000001 /* ProblemDeckConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProblemDeckConfig.swift; sourceTree = "<group>"; };
 		D2A100043A25000000000001 /* LeetCodeConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeetCodeConfig.swift; sourceTree = "<group>"; };
 		D2A100063A25000000000001 /* LegacyMirrorConfig.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LegacyMirrorConfig.swift; sourceTree = "<group>"; };
+		D2A100083A25000000000001 /* DemoSolutionData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DemoSolutionData.swift; sourceTree = "<group>"; };
 		E30000023B00000000000001 /* SocialViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialViewController.swift; sourceTree = "<group>"; };
 		E30000043B00000000000001 /* SocialUserProfileViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialUserProfileViewController.swift; sourceTree = "<group>"; };
 		E30000063B00000000000001 /* SocialUserCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SocialUserCell.swift; sourceTree = "<group>"; };
@@ -245,6 +247,7 @@
 				D2A100023A25000000000001 /* ProblemDeckConfig.swift */,
 				D2A100043A25000000000001 /* LeetCodeConfig.swift */,
 				D2A100063A25000000000001 /* LegacyMirrorConfig.swift */,
+				D2A100083A25000000000001 /* DemoSolutionData.swift */,
 			);
 			path = Constants;
 			sourceTree = "<group>";
@@ -469,6 +472,7 @@
 				CBF3B2EF2F51837A0065C963 /* Answer.swift in Sources */,
 				CBF3B2ED2F51836E0065C963 /* User.swift in Sources */,
 				D2A100013A25000000000001 /* ProblemDeckConfig.swift in Sources */,
+				D2A100073A25000000000001 /* DemoSolutionData.swift in Sources */,
 				CBF3B2E92F5177A20065C963 /* UIViewController.swift in Sources */,
 				1816EDE42F6D33AA007480FE /* AuthViewController.swift in Sources */,
 				CBF45C2D2F5A4370007739CB /* FlashCardViewController.swift in Sources */,

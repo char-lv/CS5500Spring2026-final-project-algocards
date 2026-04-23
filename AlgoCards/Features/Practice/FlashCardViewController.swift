@@ -751,6 +751,9 @@ class FlashCardViewController: UIViewController {
         var localFront = ""
         var localBack = "No official solution available for this problem.\n\nTry checking Solutions on Leetcode. 🔗"
         var localFrontErrorMessage = "Could not load problem. Please check your connection."
+        // Tracks whether the official solution API returned usable content.
+        // Used to decide whether the demo fallback should be applied.
+        var officialSolutionLoaded = false
 
         group.enter()
         NetworkManager.shared.fetchProblemDetail(titleSlug: titleSlug) { [weak self] result in
@@ -771,13 +774,21 @@ class FlashCardViewController: UIViewController {
             defer { group.leave() }
             guard let self else { return }
             if case .success(let content) = result {
-                localBack = self.parseHTML(content)
+                let parsed = self.parseHTML(content)
+                if !parsed.isEmpty {
+                    localBack = parsed
+                    officialSolutionLoaded = true
+                }
             }
         }
 
         group.notify(queue: .main) { [weak self] in
             // Discard results if the user navigated away before this fetch completed.
             guard let self = self, self.loadToken == token else { return }
+            // Apply demo-only fallback when the official solution API returned nothing usable.
+            if !officialSolutionLoaded, let demoText = DemoSolutionData.solutions[titleSlug] {
+                localBack = demoText
+            }
             self.frontDescriptionLabel.text = localFront.isEmpty
                 ? localFrontErrorMessage
                 : localFront

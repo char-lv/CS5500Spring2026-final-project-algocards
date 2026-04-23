@@ -175,11 +175,17 @@ final class HintGenerator {
         \(description)
 
         Hint progression rules:
-        - Hint 1: Name the general category of approach or data structure to consider. Do NOT name the specific algorithm.
-        - Hint 2: Name the specific technique or pattern. Still no implementation details.
-        - Hint 3: Describe the key insight or observation that unlocks the solution. No code.
+        - Hint 1: Point out one specific observation about this problem's structure, constraints, or
+          input properties that suggests a direction. Do NOT name any algorithm or data structure yet.
+          The observation must be grounded in the problem description above — not generic advice.
+        - Hint 2: Name the specific technique or data structure and give one concrete reason why it
+          fits this particular problem's structure. One to two sentences.
+        - Hint 3: Describe the key implementation detail or edge case the solution must handle,
+          tied to a specific element of this problem. No code, no pseudocode.
         - Each hint must be 1–2 sentences only.
-        - Hints must be strictly progressive: each reveals more than the one before.
+        - Hints must be strictly progressive: each reveals a little more than the one before.
+        - Do NOT write a hint that could apply word-for-word to a different LeetCode problem.
+        - Do NOT reveal the full solution approach in a single hint.
 
         Return ONLY valid JSON with no explanation, no markdown, no extra text:
         {"hints": ["hint one", "hint two", "hint three"]}
